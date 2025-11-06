@@ -1,7 +1,7 @@
 package com.buyapp.ecommerce.controller;
 
-import com.buyapp.ecommerce.exception.ForbiddenException;
-import com.buyapp.ecommerce.exception.ResourceNotFoundException;
+import com.buyapp.common.exception.ForbiddenException;
+import com.buyapp.common.exception.ResourceNotFoundException;
 import com.buyapp.ecommerce.model.Media;
 import com.buyapp.ecommerce.model.Product;
 import com.buyapp.ecommerce.service.MediaService;

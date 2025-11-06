@@ -1,6 +1,6 @@
-# Angul-It CAPTCHA Application
+# Buy-01 E-commerce Frontend
 
-A multi-stage CAPTCHA web application built with Angular that challenges users with interactive tasks to verify they are human. This project demonstrates Angular fundamentals including components, services, routing, form validation, state management, and responsive design.
+A modern e-commerce frontend built with Angular, featuring a responsive product catalog, shopping cart, checkout process, and user authentication. This project demonstrates Angular fundamentals including components, services, routing, form validation, state management, and responsive design.
 
 ## Project Overview
 
@@ -22,8 +22,8 @@ The application features persistent state management, route protection, and a re
 ### Initial Angular Project Setup
 ```bash
 # Create new Angular project
-ng new angul-it --routing --style=scss
-cd angul-it
+ng new buy-01 --routing --style=scss
+cd buy-01
 
 # Generate required components
 ng generate component components/home

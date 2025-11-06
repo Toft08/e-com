@@ -1,4 +1,4 @@
-package com.buyapp.ecommerce.exception;
+package com.buyapp.common.exception;
 
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {

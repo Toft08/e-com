@@ -1,11 +1,11 @@
 package com.buyapp.ecommerce.controller;
 
-import com.buyapp.ecommerce.dto.UserDto;
-import com.buyapp.ecommerce.exception.UnauthorizedException;
+import com.buyapp.common.dto.UserDto;
+import com.buyapp.common.exception.UnauthorizedException;
 import com.buyapp.ecommerce.model.User;
 import com.buyapp.ecommerce.repository.UserRepository;
-import com.buyapp.ecommerce.security.JwtUtil;
-import com.buyapp.ecommerce.security.TokenBlacklist;
+import com.buyapp.common.security.JwtUtil;
+import com.buyapp.common.security.TokenBlacklist;
 import com.buyapp.ecommerce.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

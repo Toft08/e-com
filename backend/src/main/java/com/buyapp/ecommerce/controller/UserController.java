@@ -1,7 +1,7 @@
 package com.buyapp.ecommerce.controller;
 
-import com.buyapp.ecommerce.dto.UserDto;
-import com.buyapp.ecommerce.exception.ResourceNotFoundException;
+import com.buyapp.common.dto.UserDto;
+import com.buyapp.common.exception.ResourceNotFoundException;
 import com.buyapp.ecommerce.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

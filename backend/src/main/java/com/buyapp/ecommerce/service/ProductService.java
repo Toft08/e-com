@@ -1,8 +1,8 @@
 package com.buyapp.ecommerce.service;
 
-import com.buyapp.ecommerce.dto.ProductDto;
-import com.buyapp.ecommerce.exception.ForbiddenException;
-import com.buyapp.ecommerce.exception.ResourceNotFoundException;
+import com.buyapp.common.dto.ProductDto;
+import com.buyapp.common.exception.ForbiddenException;
+import com.buyapp.common.exception.ResourceNotFoundException;
 import com.buyapp.ecommerce.model.Product;
 import com.buyapp.ecommerce.model.User;
 import com.buyapp.ecommerce.repository.ProductRepository;

@@ -225,7 +225,7 @@ npm run e2e
 buy-01/
 ├── backend/                 # Spring Boot application
 │   ├── src/main/java/
-│   │   └── com/toft/letsplay/
+│   │   └── com/buyapp/ecommerce/
 │   │       ├── model/       # User, Product, Media, Role
 │   │       ├── repository/  # MongoDB repositories
 │   │       ├── service/     # Business logic
@@ -268,13 +268,13 @@ buy-01/
 ## Development Notes
 
 ### Backend Architecture
-- Built on the existing `letsplay` project foundation
+- Clean and professional codebase with proper package structure
 - Extended User model with Role enum and avatar support
 - Added Media entity for image management
 - Implemented comprehensive security and validation
 
 ### Frontend Architecture  
-- Built on the existing `angul-it` project structure
+- Modern Angular application with clean architecture
 - Replaced CAPTCHA components with e-commerce components
 - Modern Angular with standalone components
 - Reactive services with RxJS

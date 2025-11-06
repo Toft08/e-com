@@ -1,7 +1,7 @@
 package com.buyapp.ecommerce.service;
 
-import com.buyapp.ecommerce.exception.BadRequestException;
-import com.buyapp.ecommerce.exception.ResourceNotFoundException;
+import com.buyapp.common.exception.BadRequestException;
+import com.buyapp.common.exception.ResourceNotFoundException;
 import com.buyapp.ecommerce.model.Media;
 import com.buyapp.ecommerce.repository.MediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
