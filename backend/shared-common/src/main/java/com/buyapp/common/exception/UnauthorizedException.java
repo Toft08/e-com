@@ -1,4 +1,4 @@
-package com.buyapp.ecommerce.exception;
+package com.buyapp.common.exception;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException(String message) {

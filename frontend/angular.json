@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angul-it": {
+    "buy-01": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -62,10 +62,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "angul-it:build:production"
+              "buildTarget": "buy-01:build:production"
             },
             "development": {
-              "buildTarget": "angul-it:build:development"
+              "buildTarget": "buy-01:build:development"
             }
           },
           "defaultConfiguration": "development"

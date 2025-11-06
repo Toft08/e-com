@@ -1,4 +1,4 @@
-package com.buyapp.ecommerce.exception;
+package com.buyapp.common.exception;
 
 public class ForbiddenException extends RuntimeException {
     public ForbiddenException(String message) {

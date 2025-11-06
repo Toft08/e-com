@@ -1,10 +1,10 @@
-package com.buyapp.ecommerce.dto;
+package com.buyapp.common.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Max;
 
 public class ProductDto {
     private String id;
@@ -27,7 +27,8 @@ public class ProductDto {
     private String user; // Email of the owner
 
     // Constructors
-    public ProductDto() {}
+    public ProductDto() {
+    }
 
     public ProductDto(String id, String name, String description, Double price, Integer quality, String user) {
         this.id = id;
@@ -39,21 +40,51 @@ public class ProductDto {
     }
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getName() {
+        return name;
+    }
 
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Integer getQuality() { return quality; }
-    public void setQuality(Integer quality) { this.quality = quality; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getUser() { return user; }
-    public void setUser(String user) { this.user = user; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getQuality() {
+        return quality;
+    }
+
+    public void setQuality(Integer quality) {
+        this.quality = quality;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
 }

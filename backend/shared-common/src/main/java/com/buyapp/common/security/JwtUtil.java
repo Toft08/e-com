@@ -1,19 +1,20 @@
-package com.buyapp.ecommerce.security;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-import io.jsonwebtoken.security.Keys;
+package com.buyapp.common.security;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -46,7 +47,7 @@ public class JwtUtil {
     public String generateToken(String email, String role) {
         UserDetails userDetails = User
                 .withUsername(email)
-                .password("") //password not needed for JWT
+                .password("") // password not needed for JWT
                 .roles(role)
                 .build();
         return generateToken(userDetails);

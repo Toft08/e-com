@@ -1,9 +1,9 @@
-package com.buyapp.ecommerce.security;
+package com.buyapp.common.security;
+
+import java.util.Date;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.Date;
 
 @Document(collection = "blacklisted_tokens")
 public class BlacklistedToken {
@@ -14,7 +14,8 @@ public class BlacklistedToken {
     private String token;
     private Date expiryDate;
 
-    public BlacklistedToken() {}
+    public BlacklistedToken() {
+    }
 
     public BlacklistedToken(String token, Date expiryDate) {
         this.token = token;

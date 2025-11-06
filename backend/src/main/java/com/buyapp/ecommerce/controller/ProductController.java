@@ -1,7 +1,7 @@
 package com.buyapp.ecommerce.controller;
 
-import com.buyapp.ecommerce.dto.ProductDto;
-import com.buyapp.ecommerce.exception.ResourceNotFoundException;
+import com.buyapp.common.dto.ProductDto;
+import com.buyapp.common.exception.ResourceNotFoundException;
 import com.buyapp.ecommerce.model.Product;
 import com.buyapp.ecommerce.repository.ProductRepository;
 import com.buyapp.ecommerce.service.ProductService;
