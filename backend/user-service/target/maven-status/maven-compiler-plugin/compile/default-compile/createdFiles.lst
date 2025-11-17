@@ -1,0 +1,9 @@
+com/buyapp/userservice/model/Role.class
+com/buyapp/userservice/config/WebClientConfig.class
+com/buyapp/userservice/repository/UserRepository.class
+com/buyapp/userservice/config/SecurityConfig.class
+com/buyapp/userservice/controller/UserController.class
+com/buyapp/userservice/controller/AuthController.class
+com/buyapp/userservice/service/UserService.class
+com/buyapp/userservice/UserServiceApplication.class
+com/buyapp/userservice/model/User.class

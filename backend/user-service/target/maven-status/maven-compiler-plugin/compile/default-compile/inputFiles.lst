@@ -1,0 +1,10 @@
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/UserServiceApplication.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/config/SecurityConfig.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/config/WebClientConfig.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/controller/AuthController.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/controller/UserController.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/model/Role.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/model/User.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/repository/UserRepository.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/security/CustomUserDetailsService.java
+/Users/ToftD/Desktop/buy-01/backend/user-service/src/main/java/com/buyapp/userservice/service/UserService.java
