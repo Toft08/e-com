@@ -1,0 +1,4 @@
+com/buyapp/apigateway/config/GatewayConfig.class
+com/buyapp/apigateway/filter/JwtAuthenticationGatewayFilterFactory.class
+com/buyapp/apigateway/filter/RequestLoggingFilter.class
+com/buyapp/apigateway/ApiGatewayApplication.class

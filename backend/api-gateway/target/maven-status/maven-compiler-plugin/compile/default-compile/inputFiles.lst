@@ -1,0 +1,4 @@
+/Users/ToftD/Desktop/buy-01/backend/api-gateway/src/main/java/com/buyapp/apigateway/ApiGatewayApplication.java
+/Users/ToftD/Desktop/buy-01/backend/api-gateway/src/main/java/com/buyapp/apigateway/config/GatewayConfig.java
+/Users/ToftD/Desktop/buy-01/backend/api-gateway/src/main/java/com/buyapp/apigateway/filter/JwtAuthenticationGatewayFilterFactory.java
+/Users/ToftD/Desktop/buy-01/backend/api-gateway/src/main/java/com/buyapp/apigateway/filter/RequestLoggingFilter.java
