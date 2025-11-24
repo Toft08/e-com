@@ -40,7 +40,7 @@ public class AuthController {
     private TokenBlacklist tokenBlacklist;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginData) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginData) {
         String email = loginData.get("email");
         String password = loginData.get("password");
 
@@ -53,6 +53,9 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
 
+        // Get user as DTO to return (without password)
+        UserDto userDto = userService.getUserByEmail(user.getEmail());
+
         // Create HttpOnly cookie for the JWT token
         ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true)
@@ -64,7 +67,10 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(Map.of("token", token, "message", "Login successful"));
+                .body(Map.of(
+                        "user", userDto,
+                        "token", token,
+                        "message", "Login successful"));
     }
 
     @PostMapping("/register")
