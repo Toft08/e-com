@@ -5,11 +5,15 @@ spring:
   cloud:
     gateway:
       default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: DedupeResponseHeader
+          args:
+            name: Access-Control-Allow-Origin
+            strategy: RETAIN_FIRST
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: '*'
+            allowedOrigins:
+              - 'http://localhost:4200'
             allowedMethods:
               - GET
               - POST

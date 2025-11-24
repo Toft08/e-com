@@ -220,19 +220,29 @@ npm run e2e
 
 1. **Register a Seller**:
    ```json
-   POST https://localhost:8443/auth/register
+   POST http://localhost:8080/auth/register
    {
      "name": "John Seller",
      "email": "john@example.com",
      "password": "password123",
-     "role": "seller",
+     "role": "SELLER",
      "avatar": "https://example.com/avatar.jpg"
    }
    ```
 
-2. **Create a Product**:
+2. **Login**:
    ```json
-   POST https://localhost:8443/products
+   POST http://localhost:8080/auth/login
+   {
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+   Copy the `token` from the response to use in subsequent requests.
+
+3. **Create a Product**:
+   ```json
+   POST http://localhost:8080/products
    Authorization: Bearer <token>
    {
      "name": "Awesome Product",
@@ -242,13 +252,46 @@ npm run e2e
    }
    ```
 
-3. **Upload Product Image**:
+4. **Upload Product Image**:
    ```
-   POST https://localhost:8443/media/upload/{productId}
+   POST http://localhost:8080/media/upload/{productId}
    Authorization: Bearer <token>
    Content-Type: multipart/form-data
    file: <image-file>
    ```
+
+### Testing with curl
+
+For quick command-line testing:
+
+```bash
+# 1. Register and save token
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Seller","email":"test@example.com","password":"pass123","role":"SELLER"}' \
+  | grep -o '"token":"[^"]*' | sed 's/"token":"//')
+
+# 2. Or login if already registered
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"pass123"}' \
+  | grep -o '"token":"[^"]*' | sed 's/"token":"//')
+
+# 3. Create product
+PRODUCT_ID=$(curl -s -X POST http://localhost:8080/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Test Product","description":"Description","price":19.99,"quality":90}' \
+  | grep -o '"id":"[^"]*' | sed 's/"id":"//')
+
+# 4. Upload image
+curl -X POST http://localhost:8080/media/upload/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/path/to/image.jpg"
+
+# 5. View all products (no auth needed)
+curl http://localhost:8080/products
+```
 
 ## Project Structure
 

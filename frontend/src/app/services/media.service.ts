@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Media } from '../models/ecommerce.model';
 import { AuthService } from './auth.service';
@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class MediaService {
-  private apiUrl = 'https://localhost:8443/media';
+  private apiUrl = 'http://localhost:8080/media';
 
   constructor(
     private http: HttpClient,
