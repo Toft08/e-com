@@ -14,7 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-info {
@@ -85,7 +85,7 @@
   background: white;
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .section-header {
@@ -128,7 +128,7 @@
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .product-image {
@@ -178,7 +178,7 @@
 
 .price {
   font-weight: 600;
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .quality {
@@ -207,13 +207,13 @@
 }
 
 .btn-primary {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   padding: 10px 20px;
 }
 
 .btn-primary:hover {
-  background-color: #1976D2;
+  background-color: #1976d2;
 }
 
 .btn-secondary {

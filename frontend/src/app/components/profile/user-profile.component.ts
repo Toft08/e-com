@@ -1,20 +1,20 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { Cart } from '../../models/cart.model';
+import { Product, User } from '../../models/ecommerce.model';
 import { AuthService } from '../../services/auth.service';
-import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { MediaService } from '../../services/media.service';
-import { Product, User } from '../../models/ecommerce.model';
-import { Cart } from '../../models/cart.model';
+import { ProductService } from '../../services/product.service';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './user-profile.component.html',
-  styleUrls: ['./user-profile.component.scss']
+  styleUrls: ['./user-profile.component.scss'],
 })
 export class UserProfileComponent implements OnInit {
   currentUser: User | null = null;
@@ -33,13 +33,13 @@ export class UserProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    
+
     if (!this.currentUser) {
       this.router.navigate(['/login']);
       return;
     }
 
-    this.cartService.cart$.subscribe(cart => {
+    this.cartService.cart$.subscribe((cart) => {
       this.cart = cart;
     });
 
@@ -53,21 +53,19 @@ export class UserProfileComponent implements OnInit {
     this.productService.getAllProducts().subscribe({
       next: (products: Product[]) => {
         // Filter products by current seller
-        this.sellerProducts = products.filter(
-          p => p.user === this.currentUser?.email
-        );
+        this.sellerProducts = products.filter((p) => p.user === this.currentUser?.email);
         this.loadProductImages();
         this.isLoading = false;
       },
       error: (error: any) => {
         console.error('Error loading products:', error);
         this.isLoading = false;
-      }
+      },
     });
   }
 
   loadProductImages(): void {
-    this.sellerProducts.forEach(product => {
+    this.sellerProducts.forEach((product) => {
       if (product.id) {
         this.mediaService.getMediaByProduct(product.id).subscribe({
           next: (media: any) => {
@@ -75,7 +73,7 @@ export class UserProfileComponent implements OnInit {
               this.productImages.set(product.id!, media[0].imagePath);
             }
           },
-          error: (error: any) => console.error('Error loading media:', error)
+          error: (error: any) => console.error('Error loading media:', error),
         });
       }
     });
@@ -97,7 +95,7 @@ export class UserProfileComponent implements OnInit {
     if (!this.currentUser?.name) return 'U';
     return this.currentUser.name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase();
   }

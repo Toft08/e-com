@@ -30,9 +30,9 @@
     <div *ngIf="!isLoading && sellerProducts.length > 0" class="products-grid">
       <div *ngFor="let product of sellerProducts" class="product-card">
         <div class="product-image">
-          <img 
-            *ngIf="getProductImage(product.id!)" 
-            [src]="getProductImage(product.id!)" 
+          <img
+            *ngIf="getProductImage(product.id!)"
+            [src]="getProductImage(product.id!)"
             [alt]="product.name"
             class="product-img"
           />
@@ -40,13 +40,17 @@
         </div>
         <div class="product-info">
           <h3>{{ product.name }}</h3>
-          <p class="description">{{ product.description | slice:0:60 }}...</p>
+          <p class="description">{{ product.description | slice : 0 : 60 }}...</p>
           <div class="product-meta">
-            <span class="price">${{ product.price | number:'1.2-2' }}</span>
+            <span class="price">${{ product.price | number : '1.2-2' }}</span>
             <span class="quality">Quality: {{ product.quality }}/5</span>
           </div>
           <div class="product-actions">
-            <a [routerLink]="['/seller/dashboard']" [queryParams]="{ productId: product.id }" class="btn btn-sm btn-secondary">
+            <a
+              [routerLink]="['/seller/dashboard']"
+              [queryParams]="{ productId: product.id }"
+              class="btn btn-sm btn-secondary"
+            >
               Edit
             </a>
           </div>
@@ -81,22 +85,19 @@
         <tbody>
           <tr *ngFor="let item of cart.items" class="cart-item">
             <td class="product-name">{{ item.productName }}</td>
-            <td class="price">${{ item.price | number:'1.2-2' }}</td>
+            <td class="price">${{ item.price | number : '1.2-2' }}</td>
             <td class="quantity">
-              <input 
-                type="number" 
-                min="1" 
+              <input
+                type="number"
+                min="1"
                 [value]="item.quantity"
                 (change)="updateQuantity(item.productId, $event)"
                 class="quantity-input"
               />
             </td>
-            <td class="total">${{ (item.price * item.quantity) | number:'1.2-2' }}</td>
+            <td class="total">${{ item.price * item.quantity | number : '1.2-2' }}</td>
             <td class="action">
-              <button 
-                (click)="removeFromCart(item.productId)"
-                class="btn btn-sm btn-danger"
-              >
+              <button (click)="removeFromCart(item.productId)" class="btn btn-sm btn-danger">
                 Remove
               </button>
             </td>
@@ -107,7 +108,7 @@
       <div class="cart-summary">
         <div class="summary-row">
           <span class="label">Subtotal:</span>
-          <span class="value">${{ cart.total | number:'1.2-2' }}</span>
+          <span class="value">${{ cart.total | number : '1.2-2' }}</span>
         </div>
         <div class="summary-row">
           <span class="label">Shipping:</span>
@@ -115,7 +116,7 @@
         </div>
         <div class="summary-row total-row">
           <span class="label">Total:</span>
-          <span class="value">${{ cart.total | number:'1.2-2' }}</span>
+          <span class="value">${{ cart.total | number : '1.2-2' }}</span>
         </div>
         <button class="btn btn-primary btn-checkout">Proceed to Checkout</button>
       </div>

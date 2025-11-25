@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Cart, CartItem } from '../models/cart.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CartService {
   private cartSubject = new BehaviorSubject<Cart>({
     userId: '',
     items: [],
-    total: 0
+    total: 0,
   });
-  
+
   public cart$ = this.cartSubject.asObservable();
 
   constructor() {
@@ -24,7 +24,7 @@ export class CartService {
 
   addToCart(item: CartItem): void {
     const currentCart = this.cartSubject.value;
-    const existingItem = currentCart.items.find(i => i.productId === item.productId);
+    const existingItem = currentCart.items.find((i) => i.productId === item.productId);
 
     if (existingItem) {
       existingItem.quantity += item.quantity;
@@ -39,8 +39,8 @@ export class CartService {
 
   removeFromCart(productId: string): void {
     const currentCart = this.cartSubject.value;
-    currentCart.items = currentCart.items.filter(i => i.productId !== productId);
-    
+    currentCart.items = currentCart.items.filter((i) => i.productId !== productId);
+
     this.updateCartTotal(currentCart);
     this.cartSubject.next(currentCart);
     this.saveCartToStorage();
@@ -48,7 +48,7 @@ export class CartService {
 
   updateQuantity(productId: string, quantity: number): void {
     const currentCart = this.cartSubject.value;
-    const item = currentCart.items.find(i => i.productId === productId);
+    const item = currentCart.items.find((i) => i.productId === productId);
 
     if (item) {
       if (quantity <= 0) {
@@ -66,7 +66,7 @@ export class CartService {
     const emptyCart: Cart = {
       userId: this.cartSubject.value.userId,
       items: [],
-      total: 0
+      total: 0,
     };
     this.cartSubject.next(emptyCart);
     this.saveCartToStorage();
@@ -83,7 +83,7 @@ export class CartService {
   }
 
   private updateCartTotal(cart: Cart): void {
-    cart.total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cart.total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
   private saveCartToStorage(): void {
