@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class ProductEvent implements Serializable {
-    private static final long serialVersionUID = 1L;
 
     public enum EventType {
         PRODUCT_CREATED,
@@ -23,7 +22,7 @@ public class ProductEvent implements Serializable {
         this.timestamp = LocalDateTime.now();
     }
 
-    public ProductEvent(String eventType, String productId, String sellerId, String sellerEmail) {
+    public ProductEvent(EventType eventType, String productId, String sellerId, String sellerEmail) {
         this.eventType = eventType;
         this.productId = productId;
         this.sellerId = sellerId;
@@ -31,7 +30,7 @@ public class ProductEvent implements Serializable {
         this.timestamp = LocalDateTime.now();
     }
 
-    public ProductEvent(String eventType, String productId, String productName, String sellerId, String sellerEmail) {
+    public ProductEvent(EventType eventType, String productId, String productName, String sellerId, String sellerEmail) {
         this.eventType = eventType;
         this.productId = productId;
         this.productName = productName;
@@ -41,11 +40,11 @@ public class ProductEvent implements Serializable {
     }
 
     // Getters and Setters
-    public String getEventType() {
+    public EventType getEventType() {
         return eventType;
     }
 
-    public void setEventType(String eventType) {
+    public void setEventType(EventType eventType) {
         this.eventType = eventType;
     }
 

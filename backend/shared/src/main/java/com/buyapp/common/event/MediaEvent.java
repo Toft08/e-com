@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class MediaEvent implements Serializable {
-    private static final long serialVersionUID = 1L;
 
     public enum EventType {
         IMAGE_UPLOADED,
@@ -24,7 +23,7 @@ public class MediaEvent implements Serializable {
         this.timestamp = LocalDateTime.now();
     }
 
-    public MediaEvent(String eventType, String mediaId, String productId, String uploadedBy) {
+    public MediaEvent(EventType eventType, String mediaId, String productId, String uploadedBy) {
         this.eventType = eventType;
         this.mediaId = mediaId;
         this.productId = productId;
@@ -32,7 +31,7 @@ public class MediaEvent implements Serializable {
         this.timestamp = LocalDateTime.now();
     }
 
-    public MediaEvent(String eventType, String mediaId, String productId, String fileName,
+    public MediaEvent(EventType eventType, String mediaId, String productId, String fileName,
             String contentType, Long fileSize, String uploadedBy) {
         this.eventType = eventType;
         this.mediaId = mediaId;
@@ -45,11 +44,11 @@ public class MediaEvent implements Serializable {
     }
 
     // Getters and Setters
-    public String getEventType() {
+    public EventType getEventType() {
         return eventType;
     }
 
-    public void setEventType(String eventType) {
+    public void setEventType(EventType eventType) {
         this.eventType = eventType;
     }
 
