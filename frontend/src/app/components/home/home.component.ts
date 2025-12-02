@@ -5,11 +5,12 @@ import { AuthService } from '../../services/auth.service';
 import { ProductService } from '../../services/product.service';
 import { MediaService } from '../../services/media.service';
 import { Product, Media, User } from '../../models/ecommerce.model';
+import { ImageSliderComponent } from '../shared/image-slider/image-slider.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ImageSliderComponent],
   template: `
     <div class="home-container">
       <!-- Hero Section -->
@@ -43,15 +44,11 @@ import { Product, Media, User } from '../../models/ecommerce.model';
         <div *ngIf="!isLoading" class="products-grid">
           <div *ngFor="let product of featuredProducts" class="product-card">
             <div class="product-image">
-              <img 
-                *ngIf="getProductImage(product.id!)" 
-                [src]="getProductImage(product.id!)" 
+              <app-image-slider
+                [images]="getProductImages(product.id!)"
                 [alt]="product.name"
-                class="product-img"
-              />
-              <div *ngIf="!getProductImage(product.id!)" class="no-image">
-                No Image
-              </div>
+                [showDots]="true"
+              ></app-image-slider>
             </div>
             <div class="product-info">
               <h3>{{ product.name }}</h3>
@@ -315,7 +312,7 @@ import { Product, Media, User } from '../../models/ecommerce.model';
 })
 export class HomeComponent implements OnInit {
   featuredProducts: Product[] = [];
-  productImages: { [productId: string]: string } = {};
+  productImages: { [productId: string]: string[] } = {};
   isLoading = true;
   currentUser: User | null = null;
 
@@ -358,7 +355,7 @@ export class HomeComponent implements OnInit {
       return this.mediaService.getMediaByProduct(product.id).toPromise()
         .then(media => {
           if (media && media.length > 0) {
-            this.productImages[product.id!] = this.mediaService.getMediaFile(media[0].id!);
+            this.productImages[product.id!] = media.map(m => this.mediaService.getMediaFile(m.id!));
           }
         })
         .catch(error => {
@@ -371,7 +368,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  getProductImage(productId: string): string | null {
-    return this.productImages[productId] || null;
+  getProductImages(productId: string): string[] {
+    return this.productImages[productId] || [];
   }
 }

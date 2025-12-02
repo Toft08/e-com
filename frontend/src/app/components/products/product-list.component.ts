@@ -6,11 +6,12 @@ import { Media, Product } from '../../models/ecommerce.model';
 import { CartService } from '../../services/cart.service';
 import { MediaService } from '../../services/media.service';
 import { ProductService } from '../../services/product.service';
+import { ImageSliderComponent } from '../shared/image-slider/image-slider.component';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ImageSliderComponent],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
 })
@@ -61,17 +62,12 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  getProductImageUrl(productId: string): string {
+  getProductImageUrls(productId: string): string[] {
     const media = this.productMedia.get(productId);
     if (media && media.length > 0) {
-      return this.mediaService.getMediaFile(media[0].id!);
+      return media.map((m) => this.mediaService.getMediaFile(m.id!));
     }
-    return 'assets/images/placeholder.svg';
-  }
-
-  hasProductImage(productId: string): boolean {
-    const media = this.productMedia.get(productId);
-    return media !== undefined && media.length > 0;
+    return [];
   }
 
   addToCart(product: Product): void {
