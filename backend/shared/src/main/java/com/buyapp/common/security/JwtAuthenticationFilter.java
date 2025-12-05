@@ -93,8 +93,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return false;
         }
         
-        // Public media endpoints (viewing images) - GET only
-        if (path.startsWith("/media/file/") || path.startsWith("/media/product/")) {
+        // Public media endpoints (viewing images and avatars) - GET only
+        if (path.startsWith("/media/file/") || path.startsWith("/media/product/") ||
+            path.startsWith("/media/avatar/file/") || path.startsWith("/media/avatar/user/")) {
             return true;
         }
         // Public product endpoints (browsing products) - GET only

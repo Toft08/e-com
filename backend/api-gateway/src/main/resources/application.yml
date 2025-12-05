@@ -68,6 +68,19 @@ spring:
             - Path=/media/product/**
             - Method=GET
 
+        # Public Avatar Routes (viewing avatars - no auth)
+        - id: media-service-public-avatar-file
+          uri: lb://media-service
+          predicates:
+            - Path=/media/avatar/file/**
+            - Method=GET
+
+        - id: media-service-public-avatar-user
+          uri: lb://media-service
+          predicates:
+            - Path=/media/avatar/user/**
+            - Method=GET
+
         # Protected Media Routes (upload/delete - auth required)
         - id: media-service-protected
           uri: lb://media-service
