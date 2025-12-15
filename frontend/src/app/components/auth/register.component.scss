@@ -194,6 +194,13 @@ label {
   margin-top: 5px;
 }
 
+.server-error {
+  text-align: center;
+  padding: $spacing-sm;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
 .auth-link {
   text-align: center;
   margin-top: $spacing-md;
@@ -209,4 +216,3 @@ label {
 .auth-link a:hover {
   text-decoration: underline;
 }
-
