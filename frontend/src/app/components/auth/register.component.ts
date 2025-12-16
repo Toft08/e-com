@@ -1,26 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { RegisterRequest } from '../../models/ecommerce.model';
 import { AuthService } from '../../services/auth.service';
 import { MediaService } from '../../services/media.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
-export class RegisterComponent {
-  userData: RegisterRequest = {
-    name: '',
-    email: '',
-    password: '',
-    role: 'client',
-  };
-
+export class RegisterComponent implements OnInit {
+  registerForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
 
@@ -29,14 +22,47 @@ export class RegisterComponent {
   avatarPreview: string | null = null;
   avatarError = '';
 
-  private allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  private maxFileSize = 2 * 1024 * 1024; // 2MB
+  private readonly allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
+  private readonly maxFileSize = 2 * 1024 * 1024; // 2MB
 
   constructor(
-    private authService: AuthService,
-    private mediaService: MediaService,
-    private router: Router
+    private readonly fb: FormBuilder,
+    private readonly authService: AuthService,
+    private readonly mediaService: MediaService,
+    private readonly router: Router
   ) {}
+
+  ngOnInit(): void {
+    this.registerForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(3)]],
+      role: ['client', [Validators.required]],
+    });
+  }
+
+  // Convenience getters for form controls
+  get name() {
+    return this.registerForm.get('name');
+  }
+
+  get email() {
+    return this.registerForm.get('email');
+  }
+
+  get password() {
+    return this.registerForm.get('password');
+  }
+
+  get role() {
+    return this.registerForm.get('role');
+  }
 
   onAvatarSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -78,15 +104,19 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
-    if (this.isLoading) return;
+    if (this.registerForm.invalid || this.isLoading) {
+      // Mark all fields as touched to show validation errors
+      this.registerForm.markAllAsTouched();
+      return;
+    }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.register(this.userData).subscribe({
+    this.authService.register(this.registerForm.value).subscribe({
       next: () => {
         // If seller and has avatar, upload it
-        if (this.userData.role === 'seller' && this.selectedAvatarFile) {
+        if (this.role?.value === 'seller' && this.selectedAvatarFile) {
           this.uploadAvatarAfterRegistration();
         } else {
           this.router.navigate(['/']);
