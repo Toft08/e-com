@@ -44,6 +44,9 @@ export class AuthService {
   }
 
   logout(): Observable<string> {
+    // Clear localStorage immediately - logout should always work client-side
+    this.clearCurrentUser();
+
     return this.http
       .post<string>(
         `${this.apiUrl}/logout`,
@@ -54,8 +57,9 @@ export class AuthService {
         }
       )
       .pipe(
-        tap(() => {
-          this.clearCurrentUser();
+        catchError(() => {
+          // Backend call failed, but we've already cleared client state
+          return of('Logged out locally');
         })
       );
   }
