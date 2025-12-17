@@ -22,6 +22,13 @@
   overflow: hidden;
 }
 
+// Card link - makes product clickable
+.card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 // Component uses shared styles from:
 // - _buttons.scss for button styling
 // - _cards.scss for product-card styling

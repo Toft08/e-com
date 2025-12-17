@@ -1,0 +1,32 @@
+<div class="product-detail-container">
+  <a routerLink="/products" class="back-link">← Back to Products</a>
+
+  <div *ngIf="loading" class="loading">Loading product...</div>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="product" class="product-detail">
+    <div class="product-image">
+      <app-image-slider
+        [images]="getProductImageUrls()"
+        [alt]="product.name"
+        [showDots]="true"
+      ></app-image-slider>
+    </div>
+
+    <div class="product-info">
+      <h1>{{ product.name }}</h1>
+      <p class="description">{{ product.description }}</p>
+      
+      <div class="product-meta">
+        <div class="price">${{ product.price }}</div>
+        <div class="quality">Quality: {{ product.quality }}%</div>
+      </div>
+
+      <button class="btn btn-primary btn-add-to-cart" (click)="addToCart()">
+        🛒 Add to Cart
+      </button>
+    </div>
+  </div>
+</div>
+

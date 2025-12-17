@@ -124,11 +124,15 @@
 }
 
 .product-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   background: $bg-card;
   border-radius: $radius-xl;
   box-shadow: $shadow-md;
   overflow: hidden;
   transition: transform $transition-normal, box-shadow $transition-normal;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-5px);

@@ -7,28 +7,30 @@
 
   <div class="products-grid">
     <div *ngFor="let product of products" class="product-card">
-      <div class="card-image-container">
-        <app-image-slider
-          [images]="getProductImageUrls(product.id!)"
-          [alt]="product.name"
-          [showDots]="true"
-        ></app-image-slider>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">{{ product.name }}</h3>
-        <p class="card-description">{{ product.description }}</p>
-        <div class="card-meta">
-          <div class="card-price">${{ product.price }}</div>
-          <div class="card-quality">{{ product.quality }}%</div>
+      <a [routerLink]="['/products', product.id]" class="card-link">
+        <div class="card-image-container">
+          <app-image-slider
+            [images]="getProductImageUrls(product.id!)"
+            [alt]="product.name"
+            [showDots]="true"
+          ></app-image-slider>
         </div>
-        <button
-          class="btn btn-add-to-cart"
-          (click)="addToCart(product)"
-          title="Shopping cart coming soon!"
-        >
-          🛒 Add to Cart
-        </button>
-      </div>
+        <div class="card-content">
+          <h3 class="card-title">{{ product.name }}</h3>
+          <p class="card-description">{{ product.description }}</p>
+          <div class="card-meta">
+            <div class="card-price">${{ product.price }}</div>
+            <div class="card-quality">{{ product.quality }}%</div>
+          </div>
+        </div>
+      </a>
+      <button
+        class="btn btn-add-to-cart"
+        (click)="addToCart(product)"
+        title="Shopping cart coming soon!"
+      >
+        🛒 Add to Cart
+      </button>
     </div>
   </div>
 

@@ -28,7 +28,7 @@
     <div *ngIf="isLoading" class="loading">Loading products...</div>
 
     <div *ngIf="!isLoading" class="products-grid">
-      <div *ngFor="let product of featuredProducts" class="product-card">
+      <a *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/products', product.id]">
         <div class="product-image">
           <app-image-slider
             [images]="getProductImages(product.id!)"
@@ -45,7 +45,7 @@
           </div>
           <p class="seller">Sold by: {{ product.user }}</p>
         </div>
-      </div>
+      </a>
     </div>
 
     <div *ngIf="featuredProducts.length === 0 && !isLoading" class="no-products">
