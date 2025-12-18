@@ -17,16 +17,15 @@
     <div class="product-info">
       <h1>{{ product.name }}</h1>
       <p class="description">{{ product.description }}</p>
-      
+
       <div class="product-meta">
         <div class="price">${{ product.price }}</div>
         <div class="quality">Quality: {{ product.quality }}%</div>
       </div>
 
-      <button class="btn btn-primary btn-add-to-cart" (click)="addToCart()">
-        🛒 Add to Cart
-      </button>
+      <p class="seller">Sold by: {{ product.user }}</p>
+
+      <button class="btn btn-primary btn-add-to-cart" (click)="addToCart()">🛒 Add to Cart</button>
     </div>
   </div>
 </div>
-

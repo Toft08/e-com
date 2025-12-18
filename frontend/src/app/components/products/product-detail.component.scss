@@ -59,6 +59,13 @@
     color: $text-muted;
     line-height: 1.6;
   }
+
+  .seller {
+    color: $text-muted;
+    font-size: 0.9rem;
+    margin-top: $spacing-sm;
+    font-weight: 500;
+  }
 }
 
 .product-meta {
@@ -86,4 +93,3 @@
   margin-top: $spacing-lg;
   width: fit-content;
 }
-

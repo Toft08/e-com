@@ -68,4 +68,3 @@ export class ProductDetailComponent implements OnInit {
     alert('Shopping cart functionality is coming soon!');
   }
 }
-
