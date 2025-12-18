@@ -1,199 +1,237 @@
 # Buy-01 E-commerce Frontend
 
-A modern e-commerce frontend built with Angular, featuring a responsive product catalog, shopping cart, checkout process, and user authentication. This project demonstrates Angular fundamentals including components, services, routing, form validation, state management, and responsive design.
-
-## Project Overview
-
-This project implements an interactive CAPTCHA system with three distinct challenge types:
-- Image selection from a grid
-- Mathematical problem solving
-- Text input verification
-
-The application features persistent state management, route protection, and a responsive design optimized for both desktop and mobile devices.
-
-## Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Angular CLI (optional but recommended)
-
-## Installation & Setup
-
-### Initial Angular Project Setup
-```bash
-# Create new Angular project
-ng new buy-01 --routing --style=scss
-cd buy-01
-
-# Generate required components
-ng generate component components/home
-ng generate component components/captcha
-ng generate component components/result
-
-# Generate services
-ng generate service services/state
-ng generate service services/challenge
-```
-
-### Development Setup
-1. **Clone or download the project**
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server:**
-   ```bash
-   npm start
-   # or
-   ng serve
-   ```
-
-4. **Open your browser and navigate to:**
-   ```
-   http://localhost:4200
-   ```
+Modern Angular 18 frontend for the Buy-01 e-commerce platform with JWT authentication, role-based access control, and responsive design.
 
 ## Features
 
-### Core Functionality
-- **Home Page**: Welcome screen with challenge overview and start button
-- **Multi-Stage Challenges**:
-  - Image Selection: Select specific images from a 3x3 grid
-  - Math Problems: Solve arithmetic equations with various operations
-  - Text Input: Type displayed text with case-sensitive validation
-- **State Management**: Progress tracking with localStorage persistence
-- **Form Validation**: Prevents progression without completing current challenge
-- **Route Protection**: Guards prevent unauthorized access to results page
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Results Page**: Performance metrics and completion status
+- **Authentication System**
+  - Login/Register with JWT token management
+  - HttpOnly cookies + localStorage for secure token storage
+  - Automatic token validation with session expiry handling
+  - Hard refresh logout to clear all cached state
 
-### Technical Implementation
-- **Components**: Modular architecture with Home, Captcha, and Result components
-- **Services**: StateService for progress tracking, ChallengeService for challenge logic
-- **Models**: TypeScript interfaces for type safety and data structure
-- **Routing**: Angular Router with functional guards for access control
+- **Product Browsing**
+  - Homepage with featured products grid
+  - Product detail pages with image slider
+  - Seller information display
+  - Cart button (functionality placeholder)
 
-## Project Structure
+- **Seller Dashboard**
+  - Create/update/delete products
+  - Upload product images (2MB limit)
+  - View and manage own products
+  - Media management with preview
 
+- **User Profile**
+  - View/edit profile information
+  - Avatar management
+  - Account deletion with cascade
+
+- **Security Features**
+  - Route guards: `authGuard`, `sellerGuard`, `roleGuard`
+  - HTTP interceptor for automatic token attachment
+  - Global 401/403 error handling
+  - HTTPS with self-signed certificates
+
+## Architecture
+
+### Standalone Components (Angular 18+)
 ```
 src/app/
 ├── components/
-│   ├── home/                 # Landing page component
-│   │   ├── home.ts
-│   │   ├── home.html
-│   │   ├── home.scss
-│   │   └── home.spec.ts
-│   ├── captcha/              # Main challenge component
-│   │   ├── captcha.ts
-│   │   ├── captcha.html
-│   │   ├── captcha.scss
-│   │   └── captcha.spec.ts
-│   └── result/               # Results/completion page
-│       ├── result.ts
-│       ├── result.html
-│       ├── result.scss
-│       └── result.spec.ts
+│   ├── home/                    # Homepage with product grid
+│   ├── login/                   # Login form
+│   ├── register/                # Registration form
+│   ├── navbar/                  # Navigation with user menu
+│   ├── products/
+│   │   ├── product-list/        # Product browsing
+│   │   └── product-detail/      # Individual product page
+│   ├── seller/
+│   │   └── seller-dashboard/    # Seller product management
+│   └── user/
+│       └── user-profile/        # User profile management
 ├── services/
-│   ├── state.ts              # Progress tracking & localStorage
-│   ├── state.spec.ts
-│   ├── challenge.ts          # Challenge generation & validation
-│   └── challenge.spec.ts
+│   ├── auth.service.ts          # Authentication + JWT
+│   ├── product.service.ts       # Product CRUD
+│   ├── media.service.ts         # Image upload/management
+│   └── cart.service.ts          # Shopping cart (in progress)
+├── guards/
+│   ├── auth.guard.ts            # Authentication check
+│   ├── seller.guard.ts          # Seller role check
+│   └── role.guard.ts            # Flexible role-based guard
+├── interceptors/
+│   └── auth.interceptor.ts      # JWT attachment + error handling
 ├── models/
-│   └── challenge.model.ts    # TypeScript interfaces
-├── constants/
-│   ├── storage.constants.ts  # Storage key constants
-│   └── image.constants.ts    # Image category constants
-├── app.routes.ts             # Routing configuration with guards
-├── app.config.ts             # Application configuration
-├── app.ts                    # Root component
-└── app.html                  # Router outlet
+│   ├── user.model.ts
+│   ├── product.model.ts
+│   └── media.model.ts
+└── app.routes.ts                # Routing configuration
 ```
 
-## How It Works
+## Setup
 
-1. **Start**: User clicks "Start Challenge" on the home page
-2. **Challenge Progression**: Complete 3 different challenge types in sequence:
-   - **Image Selection**: Select all images matching specified criteria from a grid
-   - **Math Problems**: Solve randomly generated arithmetic problems
-   - **Text Input**: Type displayed text exactly as shown (case-sensitive)
-3. **Navigation**: Use Previous/Next buttons to navigate between challenges
-4. **Validation**: Each challenge must be completed correctly before progression
-5. **Completion**: View detailed results with performance metrics
-6. **Restart**: Option to start a new challenge set or return to home
+### Prerequisites
+- Node.js 18+ and npm
+- Backend services running (see [backend README](../backend/README.md))
 
-## Security and Validation
+### Local Development (without Docker)
 
-- **Route Guards**: Functional guards prevent unauthorized access to results page
-- **Form Validation**: Real-time validation ensures challenge completion before progression
-- **State Persistence**: Progress survives page refreshes using localStorage
-- **Random Generation**: Unique challenge sets generated for each session
-- **Input Sanitization**: Proper validation for all user inputs
-
-## State Management
-
-The application implements comprehensive state management using Angular services and browser storage:
-
-- **Progress Tracking**: Current challenge index, completed challenges, and user score
-- **localStorage Integration**: Automatic save and restore of progress across sessions
-- **Results Management**: Challenge completion time, accuracy, and attempt tracking
-- **Session Handling**: Unique session identifiers and challenge set persistence
-- **Reset Functionality**: Clean slate initialization for new challenge sessions
-
-## Development
-
-### Running Tests
 ```bash
-npm test
-```
-
-### Building for Production
-```bash
-npm run build
-```
-
-### Development Server
-```bash
+cd frontend
+npm install
 npm start
 ```
 
-## Technical Requirements Met
+Accessible at `https://localhost:4200` (self-signed certificate - click "Advanced" → "Proceed")
 
-This implementation fulfills all project requirements:
+**Important:** For local development, update `src/environments/environments.ts`:
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'https://localhost:8080',  // API Gateway URL
+};
+```
 
-### Core Requirements
-- Angular application with modern standalone components architecture
-- Separate components for each application section (Home, Captcha, Result)
-- Multiple challenge types with different user interaction patterns
-- Comprehensive form validation preventing invalid progression
-- Persistent state management surviving page refreshes
-- Protected results page with proper access control
-- Responsive design optimized for all device types
+### Docker Deployment
 
-### Advanced Features
-- Dynamic challenge generation with randomization
-- Smooth animations and transitions between states
-- Professional UI/UX with modern design patterns
-- Comprehensive unit testing framework
-- TypeScript type safety throughout the application
-- Service-based architecture with dependency injection
+When running with Docker Compose (recommended), use empty `apiUrl` for nginx proxy:
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: '',  // Empty = relative URLs, proxied by nginx
+};
+```
 
-## Key Implementation Files
+Then rebuild the frontend container:
+```bash
+docker-compose build frontend
+docker-compose up -d frontend
+```
 
-- `src/app/app.routes.ts` - Routing configuration with functional guards
-- `src/app/services/state.ts` - State management and localStorage integration
-- `src/app/services/challenge.ts` - Challenge generation and validation logic
-- `src/app/models/challenge.model.ts` - TypeScript interface definitions
-- `src/app/components/captcha/captcha.ts` - Main challenge component logic
-- `src/app/constants/` - Application constants following DRY principles
+## Routing
 
-## Learning Objectives Achieved
+| Route | Component | Access | Description |
+|-------|-----------|--------|-------------|
+| `/` | HomeComponent | Public | Homepage with products |
+| `/login` | LoginComponent | Public | User login |
+| `/register` | RegisterComponent | Public | User registration |
+| `/products` | ProductListComponent | Public | Product browsing |
+| `/products/:id` | ProductDetailComponent | Public | Product detail page |
+| `/profile` | UserProfileComponent | Auth | User profile management |
+| `/seller/dashboard` | SellerDashboardComponent | Seller | Seller product management |
 
-- **Angular Fundamentals**: Components, services, routing, and directives
-- **Multi-stage Workflows**: Dynamic component interaction and state transitions
-- **Form Validation**: Comprehensive user input control and validation
-- **State Management**: Persistent progress tracking across sessions
-- **Conditional Navigation**: Access control and route protection
-- **Responsive Design**: Cross-device compatibility and optimization
-- **Modular Components**: Reusable and maintainable component architecture
-- **Unit Testing**: Testing framework setup and basic test coverage
+## Services
+
+### AuthService
+- `login(credentials)` - Authenticate user, store JWT
+- `register(userData)` - Create new account
+- `logout()` - Clear tokens and force refresh
+- `validateToken()` - Check token validity on app init
+- `getCurrentUser()` - Observable of current user
+- `isLoggedIn()` - Check authentication status
+
+### ProductService
+- `getAllProducts()` - Fetch all products (public)
+- `getProductById(id)` - Fetch single product
+- `getMyProducts()` - Fetch current user's products (authenticated)
+- `createProduct(product)` - Create new product (seller)
+- `updateProduct(id, product)` - Update product (owner)
+- `deleteProduct(id)` - Delete product (owner)
+
+### MediaService
+- `uploadMedia(productId, file)` - Upload image (max 2MB, image/*)
+- `getProductMedia(productId)` - Fetch product images
+- `getMediaUrl(mediaId)` - Get image URL
+- `deleteMedia(mediaId)` - Delete image (owner)
+
+## Guards
+
+### authGuard
+Protects routes requiring authentication. Redirects to `/login` if not authenticated.
+
+### sellerGuard
+Restricts access to seller-only features. Redirects to `/` if user is not a seller.
+
+### roleGuard
+Flexible role-based guard accepting allowed roles as parameter.
+
+## Interceptors
+
+### authInterceptor
+- Automatically attaches JWT token to outgoing requests
+- Handles 401 (Unauthorized) → redirect to login
+- Handles 403 (Forbidden) → show error message
+- Skips token attachment for login/register endpoints
+
+## Forms & Validation
+
+All forms use Angular Reactive Forms with validators:
+- **Login**: Email (required, email format), Password (required)
+- **Register**: Name (required), Email (required, unique), Password (required, min 6 chars), Role (required), Avatar (optional URL)
+- **Product**: Name (required), Description (required), Price (required, positive number), Quality (required, 0-100)
+- **Media Upload**: File (required, image/*, max 2MB)
+
+## Styling
+
+SCSS with design system:
+- `src/styles/_variables.scss` - Colors, fonts, spacing
+- `src/styles/_mixins.scss` - Reusable style patterns
+- `src/styles/_buttons.scss` - Button styles
+- `src/styles/_forms.scss` - Form input styles
+- `src/styles/_cards.scss` - Product card styles
+- `src/styles/_utilities.scss` - Helper classes
+
+**Responsive breakpoints:**
+- Mobile: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px
+
+## nginx Configuration (Docker)
+
+The nginx server handles:
+- **Static files**: `.js`, `.css`, images served with caching
+- **API proxy**: `/auth`, `/users`, `/products`, `/media` → API Gateway
+- **Content negotiation**: `/products` route distinguishes JSON (API) vs HTML (Angular)
+- **Angular routing**: All other routes serve `index.html` for client-side routing
+
+## Development Notes
+
+### Token Validation
+The app validates JWT tokens on initialization:
+- If expired/blacklisted: Shows alert, clears session, redirects to login
+- If valid: Loads user data and continues
+
+### Logout Behavior
+Logout performs:
+1. Clears current user state immediately
+2. Calls backend `/auth/logout` to blacklist token
+3. Forces hard refresh with `window.location.href = '/'`
+4. Works even if backend is unreachable
+
+### Image Upload
+- Frontend validation: 2MB max, `image/*` MIME type
+- Backend validation: Same rules enforced server-side
+- Preview before upload in seller dashboard
+- Files stored in `backend/services/media/uploads/images/`
+
+## Testing
+
+```bash
+# Unit tests
+npm test
+
+# E2E tests
+npm run e2e
+
+# Lint
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Related Documentation
+
+- [Main README](../README.md) - Full project overview and Docker setup
+- [Backend README](../backend/README.md) - Backend services and API documentation
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines

@@ -1,237 +1,565 @@
-# Buy-01 E-commerce Backend
+# Buy-01 Backend Services
 
-A RESTful CRUD API for user and product management, built with Spring Boot, MongoDB, and JWT authentication.
+Spring Boot microservices architecture with Eureka service discovery, API Gateway, and MongoDB persistence. Implements JWT authentication, role-based access control, and event-driven communication with Kafka.
+
+## Services Overview
+
+| Service | Port | Description | Database |
+|---------|------|-------------|----------|
+| **Eureka Server** | 8761 | Service discovery and registry | - |
+| **API Gateway** | 8080 | Spring Cloud Gateway with JWT validation | - |
+| **User Service** | 8081 | User registration, authentication, JWT tokens | user_service_db |
+| **Product Service** | 8082 | Product CRUD with ownership validation | product_service_db |
+| **Media Service** | 8083 | Image upload, storage, and retrieval | media_service_db |
+
+**Additional Components:**
+- **MongoDB**: Single instance with separate databases per service
+- **Kafka**: Event streaming for inter-service communication (MediaEventProducer)
 
 ## Features
 
-- **User Management:**  
-  - Register via `/auth/register`
-  - Login via `/auth/login`
-  - View/update/delete own profile via `/users/me`
-  - Admin can manage all users (except admin cannot be deleted)
-  - `POST /users` is admin-only (for admin to create users)
-  - **Cascading delete:** When a user is deleted, all their products are automatically removed
-- **Product Management:**  
-  - Create, read, update, delete products
-  - Only owner or admin can modify/delete
-  - Public can view products
-  - Products are linked to users by internal user ID (emails shown for display)
-- **Authentication:**  
-  - JWT-based login and registration
-  - Tokens can be sent via Authorization header OR HttpOnly cookies
-  - Logout via `/auth/logout` (JWT token is blacklisted and cookie cleared)
-- **Authorization:**  
-  - Role-based access (`USER`, `ADMIN`)
-  - Only one admin, all others are users
-- **Security:**  
-  - BCrypt password hashing
-  - Input validation
-  - Sensitive info protection (no passwords in responses, user IDs hidden)
-  - HTTPS ready
-  - JWT token blacklist for logout
-- **Error Handling:**  
-  - Centralized exception handler
-  - No 5XX errors, proper HTTP status codes
-- **CORS:**  
-  - Configured for local development
-- **MongoDB:**  
-  - Used for persistent storage
-- **Data Integrity:**  
-  - Transactional operations for data consistency
-  - Cascading deletes maintain referential integrity
+### User Service
+- **Registration**: Create CLIENT or SELLER accounts
+- **Authentication**: Login with email/password, returns JWT
+- **JWT Token Management**: Issue, validate, and blacklist tokens
+- **Profile Management**: View/update user info, delete account
+- **Cascading Delete**: Deleting a user removes all their products and media
+- **Security**: BCrypt password hashing, unique email validation
+
+### Product Service  
+- **Public Access**: List all products, view product details
+- **Seller Operations**: Create, update, delete products
+- **Ownership Validation**: Only product owner can modify/delete
+- **User Enrichment**: Automatically adds user's name to products
+- **Cross-Service Communication**: Notifies Media Service on product deletion
+
+### Media Service
+- **Image Upload**: 2MB max, `image/*` MIME types only
+- **Storage**: Local filesystem at `uploads/images/`
+- **Validation**: Frontend + backend file size/type checking
+- **Ownership**: Only seller can upload/delete their product images
+- **Kafka Events**: Publishes IMAGE_UPLOADED events
+- **Product Association**: Links images to products
+
+### API Gateway
+- **Routing**: Routes requests to appropriate microservices
+- **CORS**: Configured for frontend on port 4200
+- **JWT Validation**: Validates tokens before forwarding requests
+- **Load Balancing**: Uses Eureka for service discovery and load balancing
+- **HTTPS**: SSL/TLS termination with self-signed certificates
+
+### Eureka Server
+- **Service Registry**: All microservices register on startup
+- **Health Monitoring**: Tracks service health with heartbeats
+- **Discovery**: Enables dynamic service lookup
+- **Dashboard**: Web UI at http://localhost:8761
+
+## Prerequisites
+
+- **Java**: JDK 17 or higher
+- **Maven**: 3.6+ (or use included `mvnw` wrapper)
+- **MongoDB**: 4.4+ running on localhost:27017
+- **Kafka** (optional): 3.8.1 for event streaming
 
 ## Quick Start
 
-### Prerequisites
+### Option 1: Docker Compose (Recommended)
 
-- Java 17+
-- Maven
-- MongoDB (local or Docker: `docker run -d -p 27017:27017 mongo`)
+See [main README](../README.md) for Docker setup.
 
-### Running the Project
+### Option 2: Manual Setup
 
-#### Option 1: Running in Terminal
+#### 1. Start MongoDB
 
-1. **Clone the repo:**
-   ```sh
-   git clone <your-repo-url>
-   cd buy-01
-   ```
+```bash
+# Using Docker
+docker run -d -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  mongo:latest
 
-2. **Start MongoDB** (if not running):
-   ```sh
-   docker run -d -p 27017:27017 mongo
-   ```
+# Or install MongoDB locally
+brew install mongodb-community  # macOS
+sudo apt install mongodb        # Ubuntu
+```
 
-3. **Make Maven wrapper executable** (if needed):
-   ```sh
-   chmod +x mvnw
-   ```
+#### 2. Start Kafka (Optional)
 
-4. **Build and run:**
-   ```sh
-   ./mvnw spring-boot:run
-   ```
+```bash
+# Using Docker
+docker run -d -p 9092:9092 apache/kafka:3.8.1
+```
 
-5. **To stop the application:**
-   - Press `Ctrl+C` (or `Cmd+C` on Mac) in the terminal
-   - Or in another terminal: `pkill -f "spring-boot:run"`
+#### 3. Build All Services
 
-#### Option 2: Running in IntelliJ IDEA
+```bash
+cd backend
+./mvnw clean install
+```
 
-1. **Open the project:**
-   - File → Open → Select the `buy-01` folder (containing `pom.xml`)
-   - IntelliJ will automatically detect it as a Maven project
+#### 4. Start Services (in order)
 
-2. **Start MongoDB** (if not running):
-   ```sh
-   docker run -d -p 27017:27017 mongo
-   ```
+```bash
+# Terminal 1: Eureka Server
+cd services/eureka
+../../mvnw spring-boot:run
 
-3. **Run the application:**
-   - **Method A:** Click the green ▶️ button next to the `main` method in `EcommerceApplication.java`
-   - **Method B:** Right-click `EcommerceApplication.java` → Run 'EcommerceApplication'
-   - **Method C:** Use Run Configuration:
-     - Run → Edit Configurations → ➕ → Spring Boot
-     - Name: `Buy-01 Backend`
-     - Main class: `com.buyapp.ecommerce.EcommerceApplication`
-     - Click OK → Run
+# Terminal 2: User Service (wait for Eureka)
+cd services/user
+../../mvnw spring-boot:run
 
-4. **To stop the application:**
-   - Click the red ⏹️ stop button in the Run panel
-   - Or use `Ctrl+F2` (Windows/Linux) / `Cmd+F2` (Mac)
+# Terminal 3: Product Service
+cd services/product
+../../mvnw spring-boot:run
 
-#### Both Methods Result In:
-- **API available at:** `https://localhost:8443` (HTTPS with self-signed certificate)
-- **Console output:** Shows startup logs and request handling
-- **MongoDB connection:** Automatically connects to `localhost:27017`
+# Terminal 4: Media Service
+cd services/media
+../../mvnw spring-boot:run
 
-#### Troubleshooting
+# Terminal 5: API Gateway
+cd api-gateway
+../mvnw spring-boot:run
+```
 
-**Terminal Issues:**
-- `./mvnw: Permission denied` → Run: `chmod +x mvnw`
-- `./mvnw: No such file or directory` → Make sure you're in the project root directory
-- Maven wrapper missing → The `.mvn/wrapper/` directory and files should exist (auto-created if missing)
+**Startup Order Matters**: Eureka must start first, then services register with it, finally Gateway can route to them.
 
-**IntelliJ Issues:**
-- Project not recognized as Maven → File → Reload Maven Projects
-- Java version mismatch → File → Project Structure → Project → Set SDK to Java 17+
-- Port already in use → Stop other applications using port 8443 or change port in `application.properties`
+## Configuration
 
-**MongoDB Issues:**
-- Connection refused → Make sure MongoDB is running: `docker ps` should show mongo container
-- Start MongoDB: `docker run -d -p 27017:27017 mongo`
+### MongoDB Connection
 
-**SSL Certificate Issues:**
-- Browser warning about untrusted certificate → This is normal for development, click "Advanced" → "Proceed"
-- Generate new certificate if needed (see bottom of README)
+All services use authentication. Update `application.yml` if needed:
 
-### API Endpoints
+```yaml
+spring:
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/[database_name]?authSource=admin
+```
 
-#### Auth
+### JWT Configuration
 
-- `POST /auth/login` — Login, returns JWT (in response body AND HttpOnly cookie)
-- `POST /auth/register` — Register, returns JWT (in response body AND HttpOnly cookie)
-- `POST /auth/logout` — Logout, blacklists JWT token and clears cookie
+User Service generates JWT tokens. Update secret in `application.yml`:
 
-**Authentication Methods:**
-- **Option 1:** Use `Authorization: Bearer <token>` header (traditional)
-- **Option 2:** Login automatically sets HttpOnly cookie (more secure for web apps)
+```yaml
+jwt:
+  secret: your-256-bit-secret-key-here
+  expiration: 86400000  # 24 hours in milliseconds
+```
 
-#### Users
+### Service Registration
 
-- `GET /users` — List all users (admin only)
-- `GET /users/{id}` — Get user by ID (admin only)
-- `GET /users/me` — Get current user's info
-- `POST /users` — Create user (admin only)
-- `PUT /users/{id}` — Update user (admin or self, email must be unique)
-- `DELETE /users/{id}` — Delete user and all associated products (admin only, cannot delete admin)
-- `DELETE /users/me` — Delete own account and all associated products
+Each service registers with Eureka on startup:
 
-#### Products
+```yaml
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+```
 
-- `GET /products` — List all products (public)
-- `GET /products/{id}` — Get product by ID (public)
-- `POST /products` — Create product (authenticated)
-- `PUT /products/{id}` — Update product (owner or admin)
-- `DELETE /products/{id}` — Delete product (owner or admin)
-- `GET /products/my-products` — List current user's products
+### CORS Configuration (API Gateway)
 
-### Security
+```yaml
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "https://localhost:4200"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+```
 
-- **JWT:** Authentication via `Authorization: Bearer <token>` header OR HttpOnly cookies.
-- **Cookie Security:** HttpOnly, Secure (HTTPS), SameSite protection against XSS/CSRF.
-- **Roles:** Only admin can manage users; users can only manage their own profile and products.
-- **Password:** Hashed with BCrypt.
-- **Privacy:** User IDs are never exposed in API responses; only emails are shown for display.
-- **Data Integrity:** Transactional operations ensure cascading deletes maintain consistency.
-- **HTTPS:** Configured for production.
-- **CORS:** Configured for local frontend development.
-- **Logout:** Blacklists JWT token and clears cookie so it cannot be reused.
+## API Documentation
 
-### Error Handling
+### Authentication Endpoints
 
-- All errors return structured JSON with status, error, message, and path.
-- No 5XX errors; all exceptions handled.
-- **Common validation errors:**
-  - Email already exists (400) - during registration or profile update
-  - Invalid user credentials (401) - during login
-  - Unauthorized access (403) - trying to access/modify other users' data
-  - Resource not found (404) - invalid user/product IDs
+#### POST /auth/register
+Register new user.
 
-### Testing
+**Request:**
+```json
+{
+  "name": "John Seller",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "SELLER",
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
 
-- Use Postman or similar tool.
-- Register/login to get JWT.
-- **Two authentication methods:**
-  - **Header-based:** Use `Authorization: Bearer <token>` header
-  - **Cookie-based:** Login sets HttpOnly cookie automatically
-- Test all endpoints with and without JWT.
-- Try error scenarios (invalid credentials, unauthorized access, etc.).
-- Test logout: after calling `/auth/logout`, the token is blacklisted and cookie cleared.
-- **Test cascading delete:** Create products for a user, then delete the user to verify all their products are automatically removed.
-- **Test email uniqueness:** Try updating a user's email to one that already exists - should return 400 Bad Request.
+**Response (200):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "id": "507f1f77bcf86cd799439011",
+  "name": "John Seller",
+  "email": "john@example.com",
+  "role": "SELLER",
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
 
-### Bonus
+#### POST /auth/login
+Authenticate user.
 
-- **CORS:** Configured.
-- **Rate Limiting:** Not implemented (can be added as a filter).
+**Request:**
+```json
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "id": "507f1f77bcf86cd799439011",
+  "name": "John Seller",
+  "email": "john@example.com",
+  "role": "SELLER"
+}
+```
+
+#### POST /auth/logout
+Blacklist token and clear cookies.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):** `"Logout successful"`
+
+### User Endpoints
+
+#### GET /users/me
+Get current user's profile (authenticated).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "John Seller",
+  "email": "john@example.com",
+  "role": "SELLER",
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
+
+#### DELETE /users/me
+Delete own account and all associated products/media.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):** `"User deleted successfully"`
+
+### Product Endpoints
+
+#### GET /products
+List all products (public).
+
+**Response (200):**
+```json
+[
+  {
+    "id": "507f1f77bcf86cd799439012",
+    "name": "Awesome Product",
+    "description": "Best product ever",
+    "price": 29.99,
+    "quality": 95,
+    "userId": "507f1f77bcf86cd799439011",
+    "user": "John Seller"
+  }
+]
+```
+
+#### GET /products/{id}
+Get product details (public).
+
+#### POST /products
+Create new product (SELLER only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "name": "Awesome Product",
+  "description": "Best product ever",
+  "price": 29.99,
+  "quality": 95
+}
+```
+
+**Response (201):** Product object
+
+#### PUT /products/{id}
+Update product (owner only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+#### DELETE /products/{id}
+Delete product and all associated media (owner only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+#### GET /products/my-products
+Get current user's products (authenticated).
+
+**Headers:** `Authorization: Bearer <token>`
+
+### Media Endpoints
+
+#### POST /media/upload/{productId}
+Upload product image (SELLER, owner only).
+
+**Headers:**
+- `Authorization: Bearer <token>`
+- `Content-Type: multipart/form-data`
+
+**Form Data:**
+- `file`: Image file (max 2MB, `image/*`)
+
+**Response (200):**
+```json
+{
+  "id": "507f1f77bcf86cd799439013",
+  "fileName": "product-image.jpg",
+  "filePath": "uploads/images/1234567890_product-image.jpg",
+  "contentType": "image/jpeg",
+  "fileSize": 1048576,
+  "productId": "507f1f77bcf86cd799439012",
+  "sellerId": "507f1f77bcf86cd799439011"
+}
+```
+
+#### GET /media/product/{productId}
+Get all images for a product (public).
+
+#### GET /media/file/{mediaId}
+Serve image file (public).
+
+**Response:** Image bytes with appropriate `Content-Type` header
+
+#### DELETE /media/{mediaId}
+Delete media file (owner only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+## Security Implementation
+
+### JWT Authentication
+1. User logs in via `/auth/login`
+2. User Service generates JWT token with user ID, email, role
+3. Token returned in response body + HttpOnly cookie
+4. Client includes token in `Authorization: Bearer <token>` header
+5. API Gateway validates token before forwarding request
+6. Service extracts user info from `X-User-ID`, `X-User-Email`, `X-User-Role` headers
+
+### Token Blacklisting
+- Logout adds token to in-memory blacklist
+- Gateway checks blacklist before validation
+- Prevents reuse of logged-out tokens
+
+### Role-Based Access Control
+- **PUBLIC**: Anyone can view products, media
+- **CLIENT**: Can manage own profile
+- **SELLER**: Can create/manage products and upload media
+
+### Ownership Validation
+- Product/Media services check if authenticated user owns the resource
+- User ID from JWT compared to resource's `userId`/`sellerId`
+- Returns 403 Forbidden if ownership check fails
+
+### Password Security
+- Passwords hashed with BCrypt (strength 10)
+- Never stored or returned in plain text
+- Login compares BCrypt hash
+
+## Error Handling
+
+All services use `@RestControllerAdvice` for consistent error responses:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Email already exists",
+  "path": "/auth/register"
+}
+```
+
+**Common Status Codes:**
+- **400**: Bad Request (validation errors, duplicate email)
+- **401**: Unauthorized (missing/invalid token)
+- **403**: Forbidden (insufficient permissions, not owner)
+- **404**: Not Found (resource doesn't exist)
+- **500**: Internal Server Error (unexpected errors)
+
+## Testing
+
+### Integration Tests
+
+```bash
+# Run all integration tests (28 tests)
+cd backend
+./mvnw test
+
+# Test specific service
+cd services/user
+../../mvnw test
+```
+
+**Test Framework:**
+- **@SpringBootTest**: Full application context
+- **MockMvc**: HTTP endpoint testing
+- **Testcontainers**: Isolated MongoDB per test class
+- **JUnit 5**: Modern testing framework
+
+**Test Coverage:**
+- User Service: 8 tests (registration, login, validation, cascading delete)
+- Product Service: 10 tests (CRUD, authorization, ownership)
+- Media Service: 10 tests (upload, download, size limits, MIME types)
+
+See [INTEGRATION-TESTING.md](../INTEGRATION-TESTING.md) for complete testing guide.
+
+### Manual Testing with curl
+
+```bash
+# Register seller and capture token
+TOKEN=$(curl -s -X POST https://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@example.com","password":"pass123","role":"SELLER"}' \
+  -k | jq -r '.token')
+
+# Create product
+PRODUCT_ID=$(curl -s -X POST https://localhost:8080/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Product","description":"Test","price":19.99,"quality":90}' \
+  -k | jq -r '.id')
+
+# Upload image
+curl -X POST https://localhost:8080/media/upload/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/path/to/image.jpg" \
+  -k
+
+# View products (no auth)
+curl https://localhost:8080/products -k
+```
+
+## Kafka Events
+
+### MediaEventProducer
+
+Publishes events when media is uploaded:
+
+**Topic:** `media-events`
+
+**Event:**
+```json
+{
+  "eventType": "IMAGE_UPLOADED",
+  "mediaId": "507f1f77bcf86cd799439013",
+  "productId": "507f1f77bcf86cd799439012",
+  "fileName": "product-image.jpg",
+  "timestamp": "2024-01-15T10:30:00"
+}
+```
+
+**Use Cases:**
+- Image processing (resize, optimize)
+- Analytics tracking
+- Notification systems
+- Audit logging
 
 ## Project Structure
 
 ```
-buy-01/
-├── src/
-│   ├── main/
-│   │   ├── java/com/toft/buy-01/
-│   │   │   ├── model/        # User, Product
-│   │   │   ├── repository/   # UserRepository, ProductRepository, BlacklistedTokenRepository
-│   │   │   ├── service/      # UserService, ProductService
-│   │   │   ├── controller/   # UserController, ProductController, AuthController
-│   │   │   ├── security/     # SecurityConfig, JwtUtil, JwtAuthenticationFilter, CustomUserDetailsService, TokenBlacklist, BlacklistedToken
-│   │   │   ├── exception/    # GlobalExceptionHandler, custom exceptions
-│   │   │   ├── dto/          # UserDto, ProductDto
+backend/
+├── api-gateway/
+│   ├── src/main/
+│   │   ├── java/com/buyapp/gateway/
+│   │   │   ├── config/          # CORS, Security config
+│   │   │   └── filter/          # JWT validation filter
 │   │   └── resources/
-│   │       ├── application.properties
-│   │       └── keystore.p12  # Self-signed cert for HTTPS
-│   └── test/java/com/toft/buy-01/
-│       └── EcommerceApplicationTests.java
-├── .gitignore
-├── pom.xml
-├── README.md
-└── TODO.md
+│   │       └── application.yml
+│   └── pom.xml
+├── services/
+│   ├── eureka/
+│   │   ├── src/main/
+│   │   │   └── resources/application.yml
+│   │   └── pom.xml
+│   ├── user/
+│   │   ├── src/main/java/com/buyapp/user/
+│   │   │   ├── model/           # User, BlacklistedToken
+│   │   │   ├── repository/      # MongoDB repositories
+│   │   │   ├── service/         # Business logic
+│   │   │   ├── controller/      # REST endpoints
+│   │   │   ├── security/        # JWT, BCrypt, Security config
+│   │   │   ├── dto/             # Request/Response DTOs
+│   │   │   └── exception/       # Custom exceptions
+│   │   └── src/test/java/       # Integration tests
+│   ├── product/
+│   │   ├── src/main/java/com/buyapp/product/
+│   │   │   ├── model/           # Product
+│   │   │   ├── repository/
+│   │   │   ├── service/
+│   │   │   ├── controller/
+│   │   │   ├── client/          # Feign client for User Service
+│   │   │   └── exception/
+│   │   └── src/test/java/
+│   └── media/
+│       ├── src/main/java/com/buyapp/media/
+│       │   ├── model/           # Media
+│       │   ├── repository/
+│       │   ├── service/
+│       │   ├── controller/
+│       │   ├── kafka/           # MediaEventProducer
+│       │   └── exception/
+│       ├── src/test/java/
+│       └── uploads/images/      # Uploaded files
+└── shared/                      # Shared models/utilities
+    └── src/main/java/com/buyapp/shared/
 ```
 
-## Generate a new self-signed certificate for development
-```
-keytool -genkeypair -alias buy-01 -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore src/main/resources/keystore.p12 -validity 3650 -storepass changeit -dname "CN=localhost, OU=Development, O=BuyApp, L=City, ST=State, C=US"
-```
+## Troubleshooting
 
-## Requirements
-- Java 17
-- Maven
-- MongoDB
+### Service Won't Start
+- Ensure MongoDB is running: `docker ps` or `brew services list mongodb-community`
+- Check port availability: `lsof -i :8080` (kill conflicting processes)
+- Verify Java version: `java -version` (need 17+)
 
----
+### Eureka Registration Failed
+- Confirm Eureka Server running on port 8761
+- Check `eureka.client.service-url.defaultZone` in `application.yml`
+- Wait 30 seconds for initial registration
 
-**Ready for audit and production use.**
+### 401 Unauthorized Errors
+- Verify token not expired (24 hour lifetime)
+- Check token in `Authorization: Bearer <token>` header
+- Ensure token not blacklisted (logout invalidates token)
+
+### MongoDB Connection Issues
+- Verify credentials: `admin`/`password` with `authSource=admin`
+- Check MongoDB logs: `docker logs <mongo-container-id>`
+- Test connection: `mongosh mongodb://admin:password@localhost:27017/admin`
+
+### File Upload Fails
+- Verify file size ≤ 2MB: `ls -lh image.jpg`
+- Check MIME type is `image/*`: `file --mime-type image.jpg`
+- Ensure uploads directory exists and has write permissions
+
+## Related Documentation
+
+- [Main README](../README.md) - Project overview and Docker setup
+- [Frontend README](../frontend/README.md) - Angular frontend documentation
+- [INTEGRATION-TESTING.md](../INTEGRATION-TESTING.md) - Testing guide
+- [Task.md](../Task.md) - Original project requirements
