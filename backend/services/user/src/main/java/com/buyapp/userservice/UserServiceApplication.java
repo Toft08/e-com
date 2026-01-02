@@ -10,6 +10,9 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories(basePackages = { "com.buyapp.userservice.repository", "com.buyapp.common.repository" })
 public class UserServiceApplication {
 
+    // INTENTIONAL ERROR FOR TESTING - This will break the build!
+    THIS_IS_A_SYNTAX_ERROR
+
     public static void main(String[] args) {
         SpringApplication.run(UserServiceApplication.class, args);
     }
