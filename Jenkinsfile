@@ -48,44 +48,64 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 2: BUILD BACKEND
-        // Compile all Java microservices with Maven
+        // STAGE 2: BUILD SHARED MODULE
+        // Build shared module first (other services depend on it)
         // ==========================================
-        stage('Build Backend') {
+        stage('Build Shared Module') {
             steps {
-                echo '🔨 Building backend services...'
-                
-                dir('backend') {
-                    // Build shared module first (other services depend on it)
-                    sh '''
-                        echo "Building shared module..."
-                        cd shared && ../mvnw clean install -DskipTests -q
-                    '''
-                    
-                    // Build all services in parallel for speed
-                    parallel(
-                        'Eureka Server': {
-                            sh 'cd services/eureka && ../../mvnw clean package -DskipTests -q'
-                        },
-                        'User Service': {
-                            sh 'cd services/user && ../../mvnw clean package -DskipTests -q'
-                        },
-                        'Product Service': {
-                            sh 'cd services/product && ../../mvnw clean package -DskipTests -q'
-                        },
-                        'Media Service': {
-                            sh 'cd services/media && ../../mvnw clean package -DskipTests -q'
-                        },
-                        'API Gateway': {
-                            sh 'cd api-gateway && ../mvnw clean package -DskipTests -q'
-                        }
-                    )
+                echo '🔨 Building shared module...'
+                dir('backend/shared') {
+                    sh '../mvnw clean install -DskipTests -q'
                 }
             }
         }
         
         // ==========================================
-        // STAGE 3: BUILD FRONTEND
+        // STAGE 3: BUILD BACKEND SERVICES (PARALLEL)
+        // Compile all Java microservices with Maven
+        // ==========================================
+        stage('Build Backend Services') {
+            parallel {
+                stage('Eureka Server') {
+                    steps {
+                        dir('backend/services/eureka') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('User Service') {
+                    steps {
+                        dir('backend/services/user') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('Product Service') {
+                    steps {
+                        dir('backend/services/product') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('Media Service') {
+                    steps {
+                        dir('backend/services/media') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('API Gateway') {
+                    steps {
+                        dir('backend/api-gateway') {
+                            sh '../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ==========================================
+        // STAGE 4: BUILD FRONTEND
         // Install dependencies and build Angular app
         // ==========================================
         stage('Build Frontend') {
@@ -102,7 +122,7 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 4: TEST BACKEND
+        // STAGE 5: TEST BACKEND
         // Run JUnit tests for all Java services
         // ==========================================
         stage('Test Backend') {
@@ -132,7 +152,7 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 5: TEST FRONTEND
+        // STAGE 6: TEST FRONTEND
         // Run Karma/Jasmine tests for Angular
         // ==========================================
         stage('Test Frontend') {
@@ -147,7 +167,7 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 6: BUILD DOCKER IMAGES
+        // STAGE 7: BUILD DOCKER IMAGES
         // Create Docker images for all services
         // ==========================================
         stage('Build Docker Images') {
@@ -161,7 +181,7 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 7: DEPLOY
+        // STAGE 8: DEPLOY
         // Deploy the application
         // ==========================================
         stage('Deploy') {
@@ -184,7 +204,7 @@ pipeline {
         }
         
         // ==========================================
-        // STAGE 8: HEALTH CHECK
+        // STAGE 9: HEALTH CHECK
         // Verify deployment was successful
         // ==========================================
         stage('Health Check') {
