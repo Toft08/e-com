@@ -1,33 +1,33 @@
 pipeline {
     agent any
-    
+
     options {
         buildDiscarder(logRotator(numToKeepStr: '50'))
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
         ansiColor('xterm')
     }
-    
+
     environment {
         // Workspace paths
         WORKSPACE_DIR = "${WORKSPACE}"
         BACKEND_DIR = "${WORKSPACE}/backend"
         FRONTEND_DIR = "${WORKSPACE}/frontend"
-        
+
         // Build configuration
         JAVA_HOME = tool name: 'JDK-17', type: 'jdk'
         NODE_HOME = tool name: 'NodeJS-18', type: 'nodejs'
         PATH = "${JAVA_HOME}/bin:${NODE_HOME}/bin:${PATH}"
-        
+
         // Docker configuration
         DOCKER_BUILDKIT = '1'
         COMPOSE_DOCKER_CLI_BUILD = '1'
-        
+
         // Notification configuration (set via Jenkins credentials or environment)
         SLACK_ENABLED = "${env.SLACK_ENABLED ?: 'false'}"
         EMAIL_ENABLED = "${env.EMAIL_ENABLED ?: 'true'}"
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -51,7 +51,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Environment Setup') {
             steps {
                 script {
@@ -75,7 +75,7 @@ pipeline {
                 sh 'chmod +x jenkins/scripts/*.sh'
             }
         }
-        
+
         stage('Backend Build') {
             steps {
                 script {
@@ -94,7 +94,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Frontend Build') {
             steps {
                 script {
@@ -113,7 +113,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Backend Tests') {
             steps {
                 script {
@@ -133,7 +133,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Frontend Tests') {
             steps {
                 script {
@@ -157,7 +157,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Docker Build') {
             steps {
                 script {
@@ -171,17 +171,17 @@ pipeline {
                         echo "Generating SSL certificates..."
                         ./generate-ssl-certs.sh
                     fi
-                    
+
                     # Build all Docker images
                     echo "Building Docker images..."
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --no-cache
-                    
+
                     # Tag images with build number
                     docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | head -10
                 '''
             }
         }
-        
+
         stage('Integration Tests') {
             steps {
                 script {
@@ -193,11 +193,11 @@ pipeline {
                     # Start services for integration testing
                     echo "Starting services for integration tests..."
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
-                    
+
                     # Wait for services to be ready
                     echo "Waiting for services to be healthy..."
                     sleep 30
-                    
+
                     # Run integration tests
                     export WORKSPACE="${WORKSPACE}"
                     timeout 300 bash run-tests.sh || {
@@ -213,7 +213,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploy') {
             when {
                 anyOf {
@@ -235,7 +235,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Health Check') {
             when {
                 anyOf {
@@ -252,27 +252,27 @@ pipeline {
                 sh '''
                     # Wait a bit for services to stabilize
                     sleep 10
-                    
+
                     # Check API Gateway
                     echo "Checking API Gateway health..."
                     curl -k -f https://localhost:8080/actuator/health || {
                         echo "❌ API Gateway health check failed"
                         exit 1
                     }
-                    
+
                     # Check Eureka
                     echo "Checking Eureka health..."
                     curl -f http://localhost:8761/actuator/health || {
                         echo "❌ Eureka health check failed"
                         exit 1
                     }
-                    
+
                     echo "✅ All health checks passed"
                 '''
             }
         }
     }
-    
+
     post {
         always {
             script {
@@ -284,10 +284,10 @@ pipeline {
             sh '''
                 # Remove old containers
                 docker-compose -f docker-compose.yml -f docker-compose.ci.yml down || true
-                
+
                 # Clean up old images (keep last 5)
                 docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | tail -n +6 | xargs -r docker rmi || true
-                
+
                 # Remove dangling images
                 docker image prune -f || true
             '''
@@ -298,40 +298,40 @@ pipeline {
                     script: 'git log -1 --pretty=%B',
                     returnStdout: true
                 ).trim()
-                
+
                 // Slack notification
                 if (env.SLACK_ENABLED == 'true' && env.SLACK_WEBHOOK_URL) {
                     def slackMessage = """
                         ✅ *Build Successful*
-                        
+
                         *Project:* ${env.JOB_NAME}
                         *Build Number:* #${env.BUILD_NUMBER}
                         *Branch:* ${env.GIT_BRANCH_NAME}
                         *Commit:* ${commitMessage.take(50)}
                         *Build URL:* ${env.BUILD_URL}
                     """.stripIndent()
-                    
+
                     sh """
                         curl -X POST -H 'Content-type: application/json' \
                         --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
                         ${env.SLACK_WEBHOOK_URL}
                     """
                 }
-                
+
                 // Email notification (optional)
                 if (env.EMAIL_ENABLED == 'true') {
                     emailext (
                         subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                         body: """
                             Build succeeded!
-                            
+
                             Project: ${env.JOB_NAME}
                             Build Number: #${env.BUILD_NUMBER}
                             Branch: ${env.GIT_BRANCH_NAME}
                             Commit: ${commitMessage}
                             Build URL: ${env.BUILD_URL}
                         """,
-                        to: "${env.EMAIL_RECIPIENTS ?: 'team@example.com'}",
+                        to: "${env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com'}",
                         mimeType: 'text/html'
                     )
                 }
@@ -343,7 +343,7 @@ pipeline {
                     script: 'git log -1 --pretty=%B',
                     returnStdout: true
                 ).trim()
-                
+
                 // Attempt automatic rollback on deployment failure
                 if (env.GIT_BRANCH_NAME == 'main' || env.GIT_BRANCH_NAME == 'master') {
                     script {
@@ -359,42 +359,42 @@ pipeline {
                         }
                     }
                 }
-                
+
                 // Slack notification
                 if (env.SLACK_ENABLED == 'true' && env.SLACK_WEBHOOK_URL) {
                     def slackMessage = """
                         ❌ *Build Failed*
-                        
+
                         *Project:* ${env.JOB_NAME}
                         *Build Number:* #${env.BUILD_NUMBER}
                         *Branch:* ${env.GIT_BRANCH_NAME}
                         *Commit:* ${commitMessage.take(50)}
                         *Build URL:* ${env.BUILD_URL}
                     """.stripIndent()
-                    
+
                     sh """
                         curl -X POST -H 'Content-type: application/json' \
                         --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
                         ${env.SLACK_WEBHOOK_URL}
                     """
                 }
-                
+
                 // Email notification
                 if (env.EMAIL_ENABLED == 'true') {
                     emailext (
                         subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                         body: """
                             Build failed!
-                            
+
                             Project: ${env.JOB_NAME}
                             Build Number: #${env.BUILD_NUMBER}
                             Branch: ${env.GIT_BRANCH_NAME}
                             Commit: ${commitMessage}
                             Build URL: ${env.BUILD_URL}
-                            
+
                             Please check the build logs for details.
                         """,
-                        to: "${env.EMAIL_RECIPIENTS ?: 'team@example.com'}",
+                        to: "${env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com'}",
                         mimeType: 'text/html'
                     )
                 }

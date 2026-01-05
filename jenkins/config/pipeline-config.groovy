@@ -17,14 +17,14 @@ def getConfig() {
             // Email Configuration
             email: [
                 enabled: env.EMAIL_ENABLED ? env.EMAIL_ENABLED.toBoolean() : true,
-                recipients: env.EMAIL_RECIPIENTS ?: 'team@example.com',
+                recipients: env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com',
                 subject: 'Jenkins Build: ${PROJECT_NAME} - ${BUILD_STATUS}',
                 notifyOnSuccess: false,
                 notifyOnFailure: true,
                 notifyOnUnstable: true
             ]
         ],
-        
+
         // Docker Configuration
         docker: [
             registry: env.DOCKER_REGISTRY ?: '',
@@ -34,7 +34,7 @@ def getConfig() {
                 'API_URL': 'https://api-gateway:8080'
             ]
         ],
-        
+
         // Test Configuration
         tests: [
             backend: [
@@ -53,7 +53,7 @@ def getConfig() {
                 timeout: 300  // seconds
             ]
         ],
-        
+
         // Deployment Configuration
         deployment: [
             enabled: true,
@@ -64,7 +64,7 @@ def getConfig() {
             deployOnlyOnMainBranch: true,
             mainBranches: ['main', 'master']
         ],
-        
+
         // Build Configuration
         build: [
             javaVersion: '17',
@@ -72,7 +72,7 @@ def getConfig() {
             mavenOpts: '-Xmx2048m -XX:MaxPermSize=512m',
             npmRegistry: env.NPM_REGISTRY ?: 'https://registry.npmjs.org/'
         ],
-        
+
         // Artifact Configuration
         artifacts: [
             archiveBackend: true,
@@ -80,7 +80,7 @@ def getConfig() {
             keepDays: 30,
             maxBuilds: 50
         ],
-        
+
         // Cleanup Configuration
         cleanup: [
             removeOldContainers: true,
@@ -107,10 +107,10 @@ def shouldDeploy(branch) {
 def getNotificationMessage(buildStatus, buildUrl, buildNumber, commitMessage) {
     def statusEmoji = buildStatus == 'SUCCESS' ? '✅' : '❌'
     def statusColor = buildStatus == 'SUCCESS' ? 'good' : 'danger'
-    
+
     return """
         ${statusEmoji} *Build ${buildStatus}*
-        
+
         *Project:* ${env.JOB_NAME}
         *Build Number:* #${buildNumber}
         *Branch:* ${env.GIT_BRANCH ?: 'unknown'}

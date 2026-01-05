@@ -207,7 +207,7 @@ Go to **Manage Jenkins** → **Configure System**:
 
 - **Description**: "E-commerce Platform CI/CD Pipeline"
 - **GitHub project**: Check and enter your repository URL
-- **Build Triggers**: 
+- **Build Triggers**:
   - **GitHub hook trigger for GITScm polling**: Check (for automatic builds)
   - Or **Poll SCM**: `H/5 * * * *` (every 5 minutes)
 
@@ -227,7 +227,7 @@ In the pipeline job configuration, add environment variables:
 - **SLACK_ENABLED**: `true` or `false`
 - **SLACK_WEBHOOK_URL**: Your Slack webhook URL (or use credentials)
 - **EMAIL_ENABLED**: `true` or `false`
-- **EMAIL_RECIPIENTS**: `team@example.com`
+- **EMAIL_RECIPIENTS**: `anastasia.suhareva@gmail.com`
 - **DEPLOY_ENV**: `ci`
 
 ## Notification Configuration
@@ -240,6 +240,7 @@ In the pipeline job configuration, add environment variables:
 4. Add webhook URL to Jenkins credentials or environment variables
 
 **In Jenkinsfile**, set:
+
 ```groovy
 environment {
     SLACK_ENABLED = 'true'
@@ -253,10 +254,11 @@ environment {
 2. Set email recipients in pipeline environment variables
 
 **In Jenkinsfile**, set:
+
 ```groovy
 environment {
     EMAIL_ENABLED = 'true'
-    EMAIL_RECIPIENTS = 'team@example.com'
+    EMAIL_RECIPIENTS = 'anastasia.suhareva@gmail.com'
 }
 ```
 
@@ -271,6 +273,7 @@ environment {
 ### Automatic Execution
 
 The pipeline runs automatically when:
+
 - Code is pushed to `main` or `master` branch (if webhook configured)
 - Pull request is created (if configured)
 - Scheduled time (if cron trigger configured)
@@ -285,44 +288,54 @@ The pipeline runs automatically when:
 ## Pipeline Stages Explained
 
 ### 1. Checkout
+
 - Fetches code from GitHub
 - Records commit hash and branch name
 
 ### 2. Environment Setup
+
 - Verifies Java, Node.js, Docker versions
 - Makes scripts executable
 
 ### 3. Backend Build
+
 - Compiles all Spring Boot microservices
 - Creates JAR artifacts
 
 ### 4. Frontend Build
+
 - Installs npm dependencies
 - Builds Angular application
 
 ### 5. Backend Tests
+
 - Runs Maven unit tests
 - Generates JUnit XML reports
 
 ### 6. Frontend Tests
+
 - Runs Angular unit tests
 - Generates test reports
 
 ### 7. Docker Build
+
 - Builds all Docker images
 - Tags images with build number
 
 ### 8. Integration Tests
+
 - Starts all services
 - Runs E2E integration tests
 - Stops services after tests
 
 ### 9. Deploy (main/master only)
+
 - Deploys using Docker Compose
 - Waits for health checks
 - Tags successful deployment
 
 ### 10. Health Check
+
 - Verifies all services are healthy
 - Checks API Gateway and Eureka
 
@@ -331,6 +344,7 @@ The pipeline runs automatically when:
 ### Automatic Rollback
 
 The pipeline automatically rolls back if:
+
 - Deployment fails
 - Health checks fail after deployment
 - Running on `main` or `master` branch
@@ -353,11 +367,13 @@ Or create a separate Jenkins job for rollback:
 
 1. Create new **Freestyle project**: `e-com-rollback`
 2. Add **Execute shell** build step:
+
 ```bash
 cd $WORKSPACE
 export BUILD_NUMBER=$ROLLBACK_BUILD_NUMBER
 bash jenkins/scripts/rollback.sh $ROLLBACK_BUILD_NUMBER
 ```
+
 3. Add **String Parameter**: `ROLLBACK_BUILD_NUMBER`
 
 ## Troubleshooting
@@ -367,6 +383,7 @@ bash jenkins/scripts/rollback.sh $ROLLBACK_BUILD_NUMBER
 #### 1. "Docker command not found"
 
 **Solution**: Ensure Docker is installed and Jenkins user has access:
+
 ```bash
 # Add Jenkins user to docker group (Linux)
 sudo usermod -aG docker jenkins
@@ -376,6 +393,7 @@ sudo systemctl restart jenkins
 #### 2. "Permission denied" on scripts
 
 **Solution**: Scripts should be executable. The pipeline makes them executable, but if issues persist:
+
 ```bash
 chmod +x jenkins/scripts/*.sh
 ```
@@ -391,6 +409,7 @@ chmod +x jenkins/scripts/*.sh
 #### 5. "SSL certificate errors"
 
 **Solution**: The pipeline generates SSL certificates automatically. If issues persist:
+
 ```bash
 cd frontend
 ./generate-ssl-certs.sh
@@ -399,6 +418,7 @@ cd frontend
 #### 6. "Services not starting"
 
 **Solution**: Check Docker logs:
+
 ```bash
 docker-compose logs
 docker-compose ps
@@ -407,13 +427,15 @@ docker-compose ps
 #### 7. "Integration tests timeout"
 
 **Solution**: Increase timeout in Jenkinsfile:
+
 ```groovy
 timeout(time: 60, unit: 'MINUTES')  // Increase from 30
 ```
 
 #### 8. "Slack/Email notifications not working"
 
-**Solution**: 
+**Solution**:
+
 - Verify credentials are configured
 - Check webhook URL is correct
 - Verify SMTP settings for email
@@ -454,6 +476,7 @@ timeout(time: 60, unit: 'MINUTES')  // Increase from 30
 ## Support
 
 For issues or questions:
+
 1. Check this README
 2. Review Jenkins logs
 3. Check service logs
@@ -463,5 +486,3 @@ For issues or questions:
 
 **Last Updated**: 2024
 **Pipeline Version**: 1.0
-
-
