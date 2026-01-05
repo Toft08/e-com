@@ -65,7 +65,7 @@ pipeline {
                     echo "Node version:"
                     node --version
                     echo "npm version:"
-                    npm --version
+                    ${NODE_HOME}/bin/npm --version
                     echo "Docker version:"
                     docker --version
                     echo "Docker Compose version:"
@@ -104,6 +104,8 @@ pipeline {
                 }
                 sh '''
                     export WORKSPACE="${WORKSPACE}"
+                    export NODE_HOME="${NODE_HOME}"
+                    export PATH="${NODE_HOME}/bin:${PATH}"
                     bash jenkins/scripts/build-frontend.sh
                 '''
             }
@@ -143,6 +145,8 @@ pipeline {
                 }
                 sh '''
                     export WORKSPACE="${WORKSPACE}"
+                    export NODE_HOME="${NODE_HOME}"
+                    export PATH="${NODE_HOME}/bin:${PATH}"
                     bash jenkins/scripts/run-frontend-tests.sh
                 '''
             }
