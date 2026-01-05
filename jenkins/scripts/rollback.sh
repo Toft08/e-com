@@ -37,7 +37,7 @@ wait_for_service() {
             protocol="https"
             curl_opts="-k -s"
         fi
-        
+
         if curl $curl_opts ${protocol}://localhost:$port/actuator/health 2>/dev/null | grep -q '"status":"UP"'; then
             echo -e "${GREEN}✅ $service_name is ready!${NC}"
             return 0
