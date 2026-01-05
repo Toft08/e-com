@@ -16,7 +16,7 @@ pipeline {
 
         // Build configuration
         JAVA_HOME = tool name: 'JDK-17', type: 'jdk'
-        NODE_HOME = tool name: 'NodeJS-18', type: 'nodejs'
+        NODE_HOME = tool name: 'NodeJS-20', type: 'nodejs'
         PATH = "${JAVA_HOME}/bin:${NODE_HOME}/bin:${PATH}"
 
         // Docker configuration
@@ -85,6 +85,11 @@ pipeline {
                 }
                 sh '''
                     export WORKSPACE="${WORKSPACE}"
+                    if [ -z "${JAVA_HOME}" ] || [ ! -d "${JAVA_HOME}" ]; then
+                        echo "ERROR: JAVA_HOME is not set or invalid: ${JAVA_HOME}"
+                        echo "Please configure JDK-17 in Jenkins Tools configuration"
+                        exit 1
+                    fi
                     export JAVA_HOME="${JAVA_HOME}"
                     export PATH="${JAVA_HOME}/bin:${PATH}"
                     bash jenkins/scripts/build-backend.sh
