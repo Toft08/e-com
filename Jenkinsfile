@@ -292,43 +292,59 @@ pipeline {
                 echo "=========================================="
                 echo "Build completed: ${currentBuild.currentResult}"
                 echo "=========================================="
+
+                // Cleanup old Docker images (only if we have workspace context)
+                try {
+                    if (fileExists('.') && env.WORKSPACE) {
+                        sh '''
+                            # Remove old containers
+                            docker-compose -f docker-compose.yml -f docker-compose.ci.yml down || true
+
+                            # Clean up old images (keep last 5)
+                            docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | tail -n +6 | xargs -r docker rmi || true
+
+                            # Remove dangling images
+                            docker image prune -f || true
+                        '''
+                    }
+                } catch (Exception e) {
+                    echo "Cleanup skipped: ${e.getMessage()}"
+                }
             }
-            // Cleanup old Docker images
-            sh '''
-                # Remove old containers
-                docker-compose -f docker-compose.yml -f docker-compose.ci.yml down || true
-
-                # Clean up old images (keep last 5)
-                docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | tail -n +6 | xargs -r docker rmi || true
-
-                # Remove dangling images
-                docker image prune -f || true
-            '''
         }
         success {
             script {
-                def commitMessage = sh(
-                    script: 'git log -1 --pretty=%B',
-                    returnStdout: true
-                ).trim()
+                def commitMessage = ""
+                try {
+                    commitMessage = sh(
+                        script: 'git log -1 --pretty=%B',
+                        returnStdout: true
+                    ).trim()
+                } catch (Exception e) {
+                    commitMessage = "Unable to retrieve commit message"
+                }
 
                 // Slack notification
                 if (env.SLACK_ENABLED == 'true' && env.SLACK_WEBHOOK_URL) {
-                    def slackMessage = """
-                        ✅ *Build Successful*
+                    try {
+                        def slackMessage = """
+                            ✅ *Build Successful*
 
-                        *Project:* ${env.JOB_NAME}
-                        *Build Number:* #${env.BUILD_NUMBER}
-                        *Branch:* ${env.GIT_BRANCH_NAME}
-                        *Commit:* ${commitMessage.take(50)}
-                        *Build URL:* ${env.BUILD_URL}
-                    """.stripIndent()
+                            *Project:* ${env.JOB_NAME}
+                            *Build Number:* #${env.BUILD_NUMBER}
+                            *Branch:* ${env.GIT_BRANCH_NAME ?: 'unknown'}
+                            *Commit:* ${commitMessage.take(50)}
+                            *Build URL:* ${env.BUILD_URL}
+                        """.stripIndent()
 
-                    sh """
-                        curl -X POST -H 'Content-type: application/json' \
-                        --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
-                        ${env.SLACK_WEBHOOK_URL}
-                    """
+                        sh """
+                            curl -X POST -H 'Content-type: application/json' \
+                            --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
+                            ${env.SLACK_WEBHOOK_URL}
+                        """
+                    } catch (Exception e) {
+                        echo "Slack notification failed: ${e.getMessage()}"
+                    }
                 }
 
                 // Email notification (optional)
@@ -352,44 +368,53 @@ pipeline {
         }
         failure {
             script {
-                def commitMessage = sh(
-                    script: 'git log -1 --pretty=%B',
-                    returnStdout: true
-                ).trim()
+                def commitMessage = ""
+                try {
+                    commitMessage = sh(
+                        script: 'git log -1 --pretty=%B',
+                        returnStdout: true
+                    ).trim()
+                } catch (Exception e) {
+                    commitMessage = "Unable to retrieve commit message"
+                }
 
                 // Attempt automatic rollback on deployment failure
                 if (env.GIT_BRANCH_NAME == 'main' || env.GIT_BRANCH_NAME == 'master') {
-                    script {
-                        try {
+                    try {
+                        if (fileExists('jenkins/scripts/rollback.sh')) {
                             echo "Attempting automatic rollback..."
                             sh '''
                                 export WORKSPACE="${WORKSPACE}"
                                 export BUILD_NUMBER="${BUILD_NUMBER}"
                                 bash jenkins/scripts/rollback.sh previous
                             '''
-                        } catch (Exception e) {
-                            echo "Rollback failed: ${e.getMessage()}"
                         }
+                    } catch (Exception e) {
+                        echo "Rollback failed: ${e.getMessage()}"
                     }
                 }
 
                 // Slack notification
                 if (env.SLACK_ENABLED == 'true' && env.SLACK_WEBHOOK_URL) {
-                    def slackMessage = """
-                        ❌ *Build Failed*
+                    try {
+                        def slackMessage = """
+                            ❌ *Build Failed*
 
-                        *Project:* ${env.JOB_NAME}
-                        *Build Number:* #${env.BUILD_NUMBER}
-                        *Branch:* ${env.GIT_BRANCH_NAME}
-                        *Commit:* ${commitMessage.take(50)}
-                        *Build URL:* ${env.BUILD_URL}
-                    """.stripIndent()
+                            *Project:* ${env.JOB_NAME}
+                            *Build Number:* #${env.BUILD_NUMBER}
+                            *Branch:* ${env.GIT_BRANCH_NAME ?: 'unknown'}
+                            *Commit:* ${commitMessage.take(50)}
+                            *Build URL:* ${env.BUILD_URL}
+                        """.stripIndent()
 
-                    sh """
-                        curl -X POST -H 'Content-type: application/json' \
-                        --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
-                        ${env.SLACK_WEBHOOK_URL}
-                    """
+                        sh """
+                            curl -X POST -H 'Content-type: application/json' \
+                            --data '{\"text\":\"${slackMessage.replace('"', '\\"')}\"}' \
+                            ${env.SLACK_WEBHOOK_URL}
+                        """
+                    } catch (Exception e) {
+                        echo "Slack notification failed: ${e.getMessage()}"
+                    }
                 }
 
                 // Email notification
