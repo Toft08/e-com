@@ -2,7 +2,8 @@
 # Backend test execution script for Jenkins pipeline
 # Runs Maven tests and generates test reports
 
-set -e  # Exit on error
+# Don't use set -e, we'll handle errors manually
+set +e
 
 echo "=========================================="
 echo "Running Backend Tests"
@@ -15,7 +16,10 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Navigate to backend directory
-cd "$WORKSPACE/backend" || exit 1
+cd "$WORKSPACE/backend" || {
+    echo -e "${RED}❌ Failed to navigate to backend directory${NC}"
+    exit 1
+}
 
 TEST_FAILED=0
 
@@ -25,13 +29,35 @@ run_service_tests() {
     local service_path=$2
 
     echo -e "${YELLOW}Running tests for $service_name...${NC}"
-    cd "$WORKSPACE/backend/$service_path" || return 1
+    echo "Service path: $WORKSPACE/backend/$service_path"
 
-    # Use mvnw from backend root
+    if [ ! -d "$WORKSPACE/backend/$service_path" ]; then
+        echo -e "${RED}❌ Directory not found: $WORKSPACE/backend/$service_path${NC}"
+        TEST_FAILED=1
+        return 1
+    fi
+
+    cd "$WORKSPACE/backend/$service_path" || {
+        echo -e "${RED}❌ Failed to change to service directory${NC}"
+        TEST_FAILED=1
+        return 1
+    }
+
+    # Check if mvnw exists
+    if [ ! -f "$WORKSPACE/backend/mvnw" ]; then
+        echo -e "${RED}❌ mvnw not found at $WORKSPACE/backend/mvnw${NC}"
+        TEST_FAILED=1
+        cd "$WORKSPACE/backend" || return 1
+        return 1
+    fi
+
+    # Use mvnw from backend root - capture output
+    echo "Running: $WORKSPACE/backend/mvnw test"
     if "$WORKSPACE/backend/mvnw" test; then
         echo -e "${GREEN}✅ $service_name tests passed${NC}"
     else
-        echo -e "${RED}❌ $service_name tests failed${NC}"
+        local exit_code=$?
+        echo -e "${RED}❌ $service_name tests failed (exit code: $exit_code)${NC}"
         TEST_FAILED=1
     fi
 
