@@ -16,8 +16,9 @@ pipeline {
 
         // Build configuration
         JAVA_HOME = tool name: 'JDK-17', type: 'jdk'
+        // Use system Node.js if tool installation fails
         NODE_HOME = tool name: 'NodeJS-20', type: 'nodejs'
-        PATH = "${JAVA_HOME}/bin:${NODE_HOME}/bin:${PATH}"
+        PATH = "${JAVA_HOME}/bin:${NODE_HOME ?: '/usr'}/bin:${PATH}"
 
         // Docker configuration
         DOCKER_BUILDKIT = '1'
@@ -65,7 +66,7 @@ pipeline {
                     echo "Node version:"
                     node --version
                     echo "npm version:"
-                    ${NODE_HOME}/bin/npm --version
+                    npm --version
                     echo "Docker version:"
                     docker --version
                     echo "Docker Compose version:"
@@ -111,8 +112,7 @@ pipeline {
                 }
                 sh '''
                     export WORKSPACE="${WORKSPACE}"
-                    export NODE_HOME="${NODE_HOME}"
-                    export PATH="${NODE_HOME}/bin:${PATH}"
+                    export PATH="/usr/bin:${PATH}"
                     bash jenkins/scripts/build-frontend.sh
                 '''
             }
@@ -154,8 +154,7 @@ pipeline {
                 }
                 sh '''
                     export WORKSPACE="${WORKSPACE}"
-                    export NODE_HOME="${NODE_HOME}"
-                    export PATH="${NODE_HOME}/bin:${PATH}"
+                    export PATH="/usr/bin:${PATH}"
                     bash jenkins/scripts/run-frontend-tests.sh
                 '''
             }
