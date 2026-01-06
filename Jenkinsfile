@@ -200,6 +200,9 @@ pipeline {
                     echo "=========================================="
                 }
                 sh '''
+                    # Stop any existing containers first
+                    docker-compose -f docker-compose.yml -f docker-compose.ci.yml down 2>/dev/null || true
+
                     # Start services (API Gateway uses port 8081 to avoid Jenkins conflict)
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
