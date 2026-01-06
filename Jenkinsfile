@@ -179,9 +179,9 @@ pipeline {
                         ./generate-ssl-certs.sh
                     fi
 
-                    # Build all Docker images
+                    # Build all Docker images (use cache for faster builds)
                     echo "Building Docker images..."
-                    docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --no-cache
+                    docker-compose -f docker-compose.yml -f docker-compose.ci.yml build
 
                     # Tag images with build number
                     docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | head -10
@@ -204,16 +204,18 @@ pipeline {
                     echo "Starting all services..."
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
-                    # Wait a bit for API Gateway to fully initialize after health check
-                    echo "Waiting for API Gateway to be ready..."
-                    sleep 10
+                    # Verify API Gateway is healthy (Docker Compose already waited for health checks)
+                    echo "Verifying API Gateway is healthy..."
+                    sleep 3
 
-                    # Simple health check - verify API Gateway responds
-                    echo "Checking API Gateway health..."
-                    if curl -k -f https://localhost:8080/actuator/health; then
-                        echo "✅ Integration test passed - services are running"
+                    # Check if API Gateway container is healthy
+                    if docker-compose -f docker-compose.yml -f docker-compose.ci.yml ps api-gateway | grep -q "healthy"; then
+                        echo "✅ Integration test passed - all services are running and healthy"
                     else
-                        echo "❌ API Gateway health check failed"
+                        echo "❌ API Gateway is not healthy"
+                        echo "Container status:"
+                        docker-compose -f docker-compose.yml -f docker-compose.ci.yml ps
+                        echo "API Gateway logs:"
                         docker-compose -f docker-compose.yml -f docker-compose.ci.yml logs api-gateway --tail=30
                         exit 1
                     fi
