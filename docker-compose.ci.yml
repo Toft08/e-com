@@ -13,9 +13,9 @@ services:
 
   api-gateway:
     restart: unless-stopped
-    # Port will be set dynamically via environment variable
+    # Use port 8081 to avoid conflict with Jenkins (8080)
     ports:
-      - '${API_GATEWAY_PORT:-8080}:8080'
+      - '8081:8080'
     logging:
       driver: 'json-file'
       options:

@@ -16,23 +16,6 @@ NC='\033[0m'
 
 cd "$WORKSPACE" || exit 1
 
-# Find available port (try 8080-8089)
-find_available_port() {
-    for port in {8080..8089}; do
-        # Check if port is actually available on host
-        if ! (lsof -i :$port >/dev/null 2>&1 || \
-              ss -lnt 2>/dev/null | grep -q ":$port " || \
-              netstat -an 2>/dev/null | grep -q ":$port " || \
-              docker ps --format "{{.Ports}}" | grep -q ":$port->"); then
-            echo $port
-            return 0
-        fi
-    done
-    echo 8080  # Fallback
-}
-
-export API_GATEWAY_PORT=$(find_available_port)
-echo -e "${YELLOW}Using port ${API_GATEWAY_PORT} for API Gateway${NC}"
 
 # Wait for service health
 wait_for_service() {
@@ -78,7 +61,7 @@ sleep 5
 wait_for_service "User Service" 8081 || exit 1
 wait_for_service "Product Service" 8082 || exit 1
 wait_for_service "Media Service" 8083 || exit 1
-wait_for_service "API Gateway" "$API_GATEWAY_PORT" || exit 1
+wait_for_service "API Gateway" 8081 || exit 1
 
 echo -e "${GREEN}=========================================="
 echo -e "✅ Deployment successful!${NC}"
@@ -86,7 +69,7 @@ echo -e "${GREEN}=========================================="
 echo ""
 echo "Services:"
 echo "  Frontend:    https://localhost:4200"
-echo "  API Gateway: https://localhost:${API_GATEWAY_PORT}"
+echo "  API Gateway: https://localhost:8081"
 echo "  Eureka:      http://localhost:8761"
 
 

@@ -200,8 +200,7 @@ pipeline {
                     echo "=========================================="
                 }
                 sh '''
-                    # Start services for integration testing
-                    echo "Starting services for integration tests..."
+                    # Start services (API Gateway uses port 8081 to avoid Jenkins conflict)
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
                     # Wait for services to be ready
@@ -263,10 +262,9 @@ pipeline {
                     # Wait a bit for services to stabilize
                     sleep 10
 
-                    # Check API Gateway (port set dynamically)
+                    # Check API Gateway
                     echo "Checking API Gateway health..."
-                    API_PORT=${API_GATEWAY_PORT:-8080}
-                    curl -k -f https://localhost:${API_PORT}/actuator/health || {
+                    curl -k -f https://localhost:8081/actuator/health || {
                         echo "❌ API Gateway health check failed"
                         exit 1
                     }
