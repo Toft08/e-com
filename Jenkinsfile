@@ -55,7 +55,13 @@ pipeline {
                     steps {
                         sh '''
                             echo "Running frontend tests in isolated Chrome container..."
+
+                            # Get current user ID to avoid permission issues
+                            USER_ID=$(id -u)
+                            GROUP_ID=$(id -g)
+
                             docker run --rm \
+                              --user ${USER_ID}:${GROUP_ID} \
                               -v ${WORKSPACE}/frontend:/workspace \
                               -w /workspace \
                               --cap-add=SYS_ADMIN \
