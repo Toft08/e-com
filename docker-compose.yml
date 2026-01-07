@@ -38,7 +38,19 @@ services:
     networks:
       - ecom-network
     healthcheck:
-      test: [ 'CMD', 'mongosh', '--eval', "db.adminCommand('ping')", '-u', 'admin', '-p', 'password', '--authenticationDatabase', 'admin' ]
+      test:
+        [
+          'CMD',
+          'mongosh',
+          '--eval',
+          "db.adminCommand('ping')",
+          '-u',
+          'admin',
+          '-p',
+          'password',
+          '--authenticationDatabase',
+          'admin',
+        ]
       interval: 5s
       timeout: 2s
       retries: 10
@@ -47,20 +59,24 @@ services:
   # Backend services
   # -------------------
   eureka-server:
-    build: ./backend/services/eureka
+    build:
+      context: ./backend
+      dockerfile: ./services/eureka/Dockerfile
     container_name: ecom-eureka-server
     ports:
       - '8761:8761'
     networks:
       - ecom-network
     healthcheck:
-      test: [ 'CMD', 'curl', '-f', 'http://localhost:8761/actuator/health' ]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8761/actuator/health']
       interval: 5s
       timeout: 2s
       retries: 10
 
   api-gateway:
-    build: ./backend/api-gateway
+    build:
+      context: ./backend
+      dockerfile: ./api-gateway/Dockerfile
     container_name: ecom-api-gateway
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -69,7 +85,7 @@ services:
     networks:
       - ecom-network
     healthcheck:
-      test: [ 'CMD', 'curl', '-k', '-f', 'https://localhost:8080/actuator/health' ]
+      test: ['CMD', 'curl', '-k', '-f', 'https://localhost:8080/actuator/health']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -85,7 +101,9 @@ services:
         condition: service_healthy
 
   user-service:
-    build: ./backend/services/user
+    build:
+      context: ./backend
+      dockerfile: ./services/user/Dockerfile
     container_name: ecom-user-service
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -101,7 +119,7 @@ services:
     networks:
       - ecom-network
     healthcheck:
-      test: [ 'CMD', 'curl', '-f', 'http://localhost:8081/actuator/health' ]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/actuator/health']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -113,7 +131,9 @@ services:
         condition: service_healthy
 
   product-service:
-    build: ./backend/services/product
+    build:
+      context: ./backend
+      dockerfile: ./services/product/Dockerfile
     container_name: ecom-product-service
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -129,7 +149,7 @@ services:
     networks:
       - ecom-network
     healthcheck:
-      test: [ 'CMD', 'curl', '-f', 'http://localhost:8082/actuator/health' ]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8082/actuator/health']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -141,7 +161,9 @@ services:
         condition: service_healthy
 
   media-service:
-    build: ./backend/services/media
+    build:
+      context: ./backend
+      dockerfile: ./services/media/Dockerfile
     container_name: ecom-media-service
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -159,7 +181,7 @@ services:
     volumes:
       - ./backend/services/media/uploads:/app/uploads
     healthcheck:
-      test: [ 'CMD', 'curl', '-f', 'http://localhost:8083/actuator/health' ]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8083/actuator/health']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -192,7 +214,6 @@ services:
 # -------------------
 networks:
   ecom-network:
-
 
 volumes:
   mongodb_data:
