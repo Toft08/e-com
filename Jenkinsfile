@@ -61,19 +61,20 @@ pipeline {
                               -w ${WORKSPACE}/frontend \
                               --tmpfs /tmp:rw,exec,nosuid,size=2g \
                               --cap-add=SYS_ADMIN \
-                              zenika/alpine-chrome:with-node \
-                              sh -c '
-                                echo "Current directory:" && \
-                                pwd && \
-                                echo "Files here:" && \
-                                ls -la && \
+                              node:22-slim \
+                              bash -c '
+                                echo "Installing Chrome and dependencies..." && \
+                                apt-get update && \
+                                apt-get install -y chromium chromium-driver --no-install-recommends && \
+                                apt-get clean && \
+                                rm -rf /var/lib/apt/lists/* && \
+                                echo "Node version: $(node --version)" && \
+                                echo "Copying files to /tmp..." && \
                                 mkdir -p /tmp/test && \
                                 cp -r . /tmp/test/ && \
                                 cd /tmp/test && \
-                                echo "Files in /tmp/test:" && \
-                                ls -la && \
                                 npm install --legacy-peer-deps --cache /tmp/.npm --no-save --no-package-lock && \
-                                CHROME_BIN=/usr/bin/chromium-browser npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+                                CHROME_BIN=/usr/bin/chromium npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
                               ' || {
                                 EXIT_CODE=$?
                                 echo "Frontend tests failed with exit code: $EXIT_CODE"
