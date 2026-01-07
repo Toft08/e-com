@@ -57,17 +57,18 @@ pipeline {
                             echo "Running frontend tests in isolated Chrome container..."
 
                             docker run --rm \
-                              -v ${WORKSPACE}/frontend:/workspace:ro \
+                              --volumes-from jenkins \
+                              -w ${WORKSPACE}/frontend \
                               --tmpfs /tmp:rw,exec,nosuid,size=2g \
                               --cap-add=SYS_ADMIN \
                               zenika/alpine-chrome:with-node \
                               sh -c '
-                                echo "Checking /workspace..." && \
-                                ls -la /workspace/ && \
-                                echo "Creating /tmp/test..." && \
+                                echo "Current directory:" && \
+                                pwd && \
+                                echo "Files here:" && \
+                                ls -la && \
                                 mkdir -p /tmp/test && \
-                                echo "Copying files..." && \
-                                cp -r /workspace/. /tmp/test/ && \
+                                cp -r . /tmp/test/ && \
                                 cd /tmp/test && \
                                 echo "Files in /tmp/test:" && \
                                 ls -la && \
