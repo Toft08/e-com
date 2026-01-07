@@ -30,27 +30,6 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: false,
     browsers: ['ChromeHeadless'],
-    customLaunchers: {
-      ChromeHeadless: {
-        base: 'ChromeHeadless',
-        flags: [
-          '--no-sandbox',
-          '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-setuid-sandbox',
-        ],
-      },
-      ChromeHeadlessCI: {
-        base: 'ChromeHeadless',
-        flags: [
-          '--no-sandbox',
-          '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-setuid-sandbox',
-          '--disable-software-rasterizer',
-        ],
-      },
-    },
     singleRun: true,
     restartOnFileChange: false,
     captureTimeout: 60000,

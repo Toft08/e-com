@@ -54,21 +54,18 @@ pipeline {
                 stage('Frontend Tests') {
                     steps {
                         sh '''
-                            cd frontend || exit 1
-
-                            # Set Chrome/Chromium binary path for headless testing
-                            if [ -f /usr/bin/google-chrome-stable ]; then
-                                export CHROME_BIN=/usr/bin/google-chrome-stable
-                            elif [ -f /usr/bin/google-chrome ]; then
-                                export CHROME_BIN=/usr/bin/google-chrome
-                            elif [ -f /usr/bin/chromium ]; then
-                                export CHROME_BIN=/usr/bin/chromium
-                            elif [ -f /usr/bin/chromium-browser ]; then
-                                export CHROME_BIN=/usr/bin/chromium-browser
-                            fi
-
-                            npm ci || npm install
-                            npm run test:ci
+                            echo "Running frontend tests in isolated Chrome container..."
+                            docker run --rm \
+                              -v ${WORKSPACE}/frontend:/workspace \
+                              -w /workspace \
+                              --cap-add=SYS_ADMIN \
+                              zenika/alpine-chrome:with-node \
+                              sh -c "npm install --legacy-peer-deps && CHROME_BIN=/usr/bin/chromium-browser npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage" || {
+                                EXIT_CODE=$?
+                                echo "Frontend tests failed with exit code: $EXIT_CODE"
+                                exit $EXIT_CODE
+                            }
+                            echo "✅ Frontend tests passed"
                         '''
                     }
                 }
