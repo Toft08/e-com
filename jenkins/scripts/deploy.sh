@@ -47,13 +47,34 @@ else
     echo -e "${YELLOW}⚠️  API Gateway health check failed, but services are running${NC}"
 fi
 
+# Save deployment state for potential rollback
+DEPLOYMENT_STATE_DIR="$WORKSPACE/.deployment-state"
+mkdir -p "$DEPLOYMENT_STATE_DIR"
+
+# Save current build info
+cat > "$DEPLOYMENT_STATE_DIR/last-successful-deployment.txt" << EOF
+BUILD_NUMBER=${BUILD_NUMBER}
+GIT_COMMIT=${GIT_COMMIT}
+DEPLOYMENT_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+EOF
+
+# Save current images
+docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" > "$DEPLOYMENT_STATE_DIR/current-images-${BUILD_NUMBER}.txt" || true
+
+# Copy current state as previous for next deployment
+if [ -f "$DEPLOYMENT_STATE_DIR/current-images-${BUILD_NUMBER}.txt" ]; then
+    cp "$DEPLOYMENT_STATE_DIR/current-images-${BUILD_NUMBER}.txt" "$DEPLOYMENT_STATE_DIR/previous-images-${BUILD_NUMBER}.txt" || true
+fi
+
 echo -e "${GREEN}=========================================="
 echo -e "✅ Deployment successful!${NC}"
 echo -e "${GREEN}=========================================="
 echo ""
-echo "Services:"
+echo "Services are now running:"
 echo "  Frontend:    https://localhost:4200"
 echo "  API Gateway: https://localhost:8080"
 echo "  Eureka:      http://localhost:8761"
+echo ""
+echo -e "${YELLOW}Deployment state saved for rollback${NC}"
 
 
