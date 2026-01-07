@@ -107,6 +107,9 @@ pipeline {
                     # Stop old containers
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml down || true
 
+                    # Force remove any lingering containers with ecom- prefix
+                    docker ps -a | grep ecom- | awk '{print $1}' | xargs -r docker rm -f || true
+
                     # Start new containers
                     docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
