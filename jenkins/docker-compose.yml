@@ -11,4 +11,8 @@ services:
     volumes:
       - ~/jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_ADMIN
     restart: unless-stopped
