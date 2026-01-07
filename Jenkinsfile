@@ -144,7 +144,79 @@ pipeline {
                             export WORKSPACE="${WORKSPACE}"
                             export JAVA_HOME="${JAVA_HOME}"
                             export PATH="${JAVA_HOME}/bin:${PATH}"
-                            bash jenkins/scripts/run-backend-tests.sh
+
+                            cd "${WORKSPACE}/backend" || exit 1
+
+                            # Create test reports directory
+                            mkdir -p "${WORKSPACE}/test-reports/backend"
+
+                            # Run tests for each service
+                            echo "Running tests for User Service..."
+                            cd services/user || exit 1
+                            if ! ../../mvnw test; then
+                                echo "❌ User Service tests failed"
+                                exit 1
+                            fi
+                            # Copy test reports
+                            if [ -d "target/surefire-reports" ]; then
+                                mkdir -p "${WORKSPACE}/test-reports/backend/user"
+                                cp -r target/surefire-reports/* "${WORKSPACE}/test-reports/backend/user/" 2>/dev/null || true
+                            fi
+                            cd ../..
+
+                            echo "Running tests for Product Service..."
+                            cd services/product || exit 1
+                            if ! ../../mvnw test; then
+                                echo "❌ Product Service tests failed"
+                                exit 1
+                            fi
+                            # Copy test reports
+                            if [ -d "target/surefire-reports" ]; then
+                                mkdir -p "${WORKSPACE}/test-reports/backend/product"
+                                cp -r target/surefire-reports/* "${WORKSPACE}/test-reports/backend/product/" 2>/dev/null || true
+                            fi
+                            cd ../..
+
+                            echo "Running tests for Media Service..."
+                            cd services/media || exit 1
+                            if ! ../../mvnw test; then
+                                echo "❌ Media Service tests failed"
+                                exit 1
+                            fi
+                            # Copy test reports
+                            if [ -d "target/surefire-reports" ]; then
+                                mkdir -p "${WORKSPACE}/test-reports/backend/media"
+                                cp -r target/surefire-reports/* "${WORKSPACE}/test-reports/backend/media/" 2>/dev/null || true
+                            fi
+                            cd ../..
+
+                            echo "Running tests for Eureka Server..."
+                            cd services/eureka || exit 1
+                            if ! ../../mvnw test; then
+                                echo "❌ Eureka Server tests failed"
+                                exit 1
+                            fi
+                            # Copy test reports
+                            if [ -d "target/surefire-reports" ]; then
+                                mkdir -p "${WORKSPACE}/test-reports/backend/eureka"
+                                cp -r target/surefire-reports/* "${WORKSPACE}/test-reports/backend/eureka/" 2>/dev/null || true
+                            fi
+                            cd ../..
+
+                            echo "Running tests for API Gateway..."
+                            cd api-gateway || exit 1
+                            if ! ../mvnw test; then
+                                echo "❌ API Gateway tests failed"
+                                exit 1
+                            fi
+                            # Copy test reports
+                            if [ -d "target/surefire-reports" ]; then
+                                mkdir -p "${WORKSPACE}/test-reports/backend/api-gateway"
+                                cp -r target/surefire-reports/* "${WORKSPACE}/test-reports/backend/api-gateway/" 2>/dev/null || true
+                            fi
+                            cd ..
+
+                            echo "✅ All backend tests passed!"
                         '''
                     }
                     post {
@@ -163,7 +235,37 @@ pipeline {
                         }
                         sh '''
                             export WORKSPACE="${WORKSPACE}"
-                            bash jenkins/scripts/run-frontend-tests.sh
+
+                            cd "${WORKSPACE}/frontend" || exit 1
+
+                            # Ensure dependencies are installed
+                            if [ ! -d "node_modules" ]; then
+                                echo "Installing dependencies..."
+                                npm ci
+                            fi
+
+                            # Create test reports directory
+                            mkdir -p "${WORKSPACE}/test-reports/frontend"
+
+                            echo "Running Angular unit tests..."
+
+                            # Run tests in CI mode (headless, no watch, with coverage)
+                            if ! npm run test:ci; then
+                                echo "❌ Frontend tests failed"
+                                exit 1
+                            fi
+
+                            # Copy test reports if available
+                            if [ -d "coverage" ]; then
+                                cp -r coverage/* "${WORKSPACE}/test-reports/frontend/" 2>/dev/null || true
+                            fi
+
+                            # Look for JUnit XML reports (if karma-junit-reporter is configured)
+                            if [ -d "test-results" ]; then
+                                cp -r test-results/* "${WORKSPACE}/test-reports/frontend/" 2>/dev/null || true
+                            fi
+
+                            echo "✅ Frontend tests passed!"
                         '''
                     }
                     post {
