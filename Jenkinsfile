@@ -1,6 +1,13 @@
 pipeline {
     agent any
 
+    // Triggers: Check for new commits automatically
+    triggers {
+        // Poll SCM every 2 minutes (H/2 means every 2 minutes, with random offset)
+        // This checks your Git repository for new commits
+        pollSCM('H/2 * * * *')
+    }
+
     options {
         buildDiscarder(logRotator(numToKeepStr: '50'))
         timeout(time: 30, unit: 'MINUTES')
@@ -310,6 +317,10 @@ pipeline {
 
                 // Email notification
                 if (env.EMAIL_ENABLED == 'true') {
+                    // Parse email recipients (comma-separated string or use default)
+                    def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                    def recipientList = emailRecipients.split(',').collect { it.trim() }
+
                     emailext (
                         subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                         body: """
@@ -321,7 +332,7 @@ pipeline {
                             Commit: ${commitMessage}
                             Build URL: ${env.BUILD_URL}
                         """,
-                        to: "${env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com'}",
+                        to: recipientList.join(','),
                         mimeType: 'text/html'
                     )
                 }
@@ -357,6 +368,10 @@ pipeline {
 
                 // Email notification
                 if (env.EMAIL_ENABLED == 'true') {
+                    // Parse email recipients (comma-separated string or use default)
+                    def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                    def recipientList = emailRecipients.split(',').collect { it.trim() }
+
                     emailext (
                         subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                         body: """
@@ -370,7 +385,7 @@ pipeline {
 
                             Please check the build logs for details.
                         """,
-                        to: "${env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com'}",
+                        to: recipientList.join(','),
                         mimeType: 'text/html'
                     )
                 }
