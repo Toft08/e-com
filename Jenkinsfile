@@ -179,11 +179,26 @@ pipeline {
                         ./generate-ssl-certs.sh
                     fi
 
-                    # Build all Docker images (use cache for faster builds)
-                    echo "Building Docker images..."
-                    docker-compose -f docker-compose.yml -f docker-compose.ci.yml build
+                    # Build Docker images sequentially with progress output
+                    # Building one at a time provides better visibility and reduces resource contention
+                    echo "Building Docker images sequentially..."
 
-                    # Tag images with build number
+                    # List of services to build in order
+                    SERVICES="eureka-server user-service product-service media-service api-gateway frontend"
+
+                    # Build each service
+                    for service in $SERVICES; do
+                        echo "📦 Building ${service}..."
+                        if ! docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --progress=plain "${service}"; then
+                            echo "❌ Failed to build ${service}"
+                            exit 1
+                        fi
+                    done
+
+                    echo "✅ All Docker images built successfully!"
+
+                    # Show built images
+                    echo "Built images:"
                     docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "ecom-|e-commerce" | head -10
                 '''
             }
