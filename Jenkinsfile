@@ -222,40 +222,29 @@ pipeline {
                 } else {
                     echo "No workspace available; skipping cleanWs"
                 }
-            }
-        }
-        success {
-            script {
+
+                // Send email notification
+                def buildStatus = currentBuild.currentResult
                 def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
                 def recipientList = emailRecipients.split(',').collect { it.trim() }
+
+                def statusEmoji = buildStatus == 'SUCCESS' ? '✅' : '❌'
+                def statusText = buildStatus == 'SUCCESS' ? 'succeeded' : 'failed'
+
+                def emailSubject = "${statusEmoji} Build ${buildStatus.capitalize()}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+
+                def emailBody = """
+                    <h3>Build ${statusText}!</h3>
+                    <p><strong>Project:</strong> ${env.JOB_NAME}<br>
+                    <strong>Build Number:</strong> #${env.BUILD_NUMBER}<br>
+                    <strong>Commit:</strong> ${env.COMMIT_MESSAGE}<br>
+                    <strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                    ${buildStatus == 'SUCCESS' ? '' : '<p><em>Please check the build logs for details.</em></p>'}
+                """
+
                 emailext (
-                    subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-                        Build succeeded!
-                        Project: ${env.JOB_NAME}
-                        Build Number: #${env.BUILD_NUMBER}
-                        Commit: ${env.COMMIT_MESSAGE}
-                        Build URL: ${env.BUILD_URL}
-                    """,
-                    to: recipientList.join(','),
-                    mimeType: 'text/html'
-                )
-            }
-        }
-        failure {
-            script {
-                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
-                def recipientList = emailRecipients.split(',').collect { it.trim() }
-                emailext (
-                    subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-                        Build failed!
-                        Project: ${env.JOB_NAME}
-                        Build Number: #${env.BUILD_NUMBER}
-                        Commit: ${env.COMMIT_MESSAGE}
-                        Build URL: ${env.BUILD_URL}
-                        Please check the build logs for details.
-                    """,
+                    subject: emailSubject,
+                    body: emailBody,
                     to: recipientList.join(','),
                     mimeType: 'text/html'
                 )
