@@ -201,44 +201,40 @@ pipeline {
         success {
             script {
                 def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
-                if (env.EMAIL_ENABLED == 'true') {
-                    def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
-                    def recipientList = emailRecipients.split(',').collect { it.trim() }
-                    emailext (
-                        subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                        body: """
-                            Build succeeded!
-                            Project: ${env.JOB_NAME}
-                            Build Number: #${env.BUILD_NUMBER}
-                            Commit: ${commitMessage}
-                            Build URL: ${env.BUILD_URL}
-                        """,
-                        to: recipientList.join(','),
-                        mimeType: 'text/html'
-                    )
-                }
+                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                def recipientList = emailRecipients.split(',').collect { it.trim() }
+                emailext (
+                    subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """
+                        Build succeeded!
+                        Project: ${env.JOB_NAME}
+                        Build Number: #${env.BUILD_NUMBER}
+                        Commit: ${commitMessage}
+                        Build URL: ${env.BUILD_URL}
+                    """,
+                    to: recipientList.join(','),
+                    mimeType: 'text/html'
+                )
             }
         }
         failure {
             script {
                 def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
-                if (env.EMAIL_ENABLED == 'true') {
-                    def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
-                    def recipientList = emailRecipients.split(',').collect { it.trim() }
-                    emailext (
-                        subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                        body: """
-                            Build failed!
-                            Project: ${env.JOB_NAME}
-                            Build Number: #${env.BUILD_NUMBER}
-                            Commit: ${commitMessage}
-                            Build URL: ${env.BUILD_URL}
-                            Please check the build logs for details.
-                        """,
-                        to: recipientList.join(','),
-                        mimeType: 'text/html'
-                    )
-                }
+                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                def recipientList = emailRecipients.split(',').collect { it.trim() }
+                emailext (
+                    subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """
+                        Build failed!
+                        Project: ${env.JOB_NAME}
+                        Build Number: #${env.BUILD_NUMBER}
+                        Commit: ${commitMessage}
+                        Build URL: ${env.BUILD_URL}
+                        Please check the build logs for details.
+                    """,
+                    to: recipientList.join(','),
+                    mimeType: 'text/html'
+                )
             }
         }
     }
