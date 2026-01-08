@@ -50,32 +50,9 @@ pipeline {
                     steps {
                         sh '''
                             echo "Running frontend tests..."
-
-                            docker run --rm \
-                              --volumes-from jenkins \
-                              -w ${WORKSPACE}/frontend \
-                              -e WORKSPACE=${WORKSPACE} \
-                              --tmpfs /tmp:rw,exec,nosuid,size=2g \
-                              --cap-add=SYS_ADMIN \
-                              buildkite/puppeteer:latest \
-                              bash -c '
-                                echo "Node version: $(node --version)" && \
-                                echo "Chrome version: $(google-chrome --version)" && \
-                                echo "Copying files to /tmp..." && \
-                                mkdir -p /tmp/test && \
-                                cp -r . /tmp/test/ && \
-                                cd /tmp/test && \
-                                npm install --legacy-peer-deps --cache /tmp/.npm --no-save --no-package-lock && \
-                                npm run test && \
-                                echo "Copying test results back to workspace..." && \
-                                mkdir -p ${WORKSPACE}/frontend/test-results && \
-                                cp -r test-results/* ${WORKSPACE}/frontend/test-results/ && \
-                                echo "Test results copied successfully"
-                              ' || {
-                                EXIT_CODE=$?
-                                echo "Frontend tests failed with exit code: $EXIT_CODE"
-                                exit $EXIT_CODE
-                            }
+                            cd frontend
+                            npm ci
+                            npm run test
                             echo "✅ Frontend tests passed"
                         '''
                     }
