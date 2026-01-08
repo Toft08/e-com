@@ -8,7 +8,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        provideHttpClient(),
+        provideHttpClien(),
         provideRouter([]), // Empty routes for testing
       ],
     }).compileComponents();
