@@ -74,7 +74,9 @@ pipeline {
                                 cp -r . /tmp/test/ && \
                                 cd /tmp/test && \
                                 npm install --legacy-peer-deps --cache /tmp/.npm --no-save --no-package-lock && \
-                                CHROME_BIN=/usr/bin/chromium npm run test
+                                CHROME_BIN=/usr/bin/chromium npm run test && \
+                                echo "Copying test results back to workspace..." && \
+                                cp -r test-results /var/jenkins_home/workspace/*/frontend/ 2>/dev/null || true
                               ' || {
                                 EXIT_CODE=$?
                                 echo "Frontend tests failed with exit code: $EXIT_CODE"
@@ -82,6 +84,11 @@ pipeline {
                             }
                             echo "✅ Frontend tests passed"
                         '''
+                    }
+                    post {
+                        always {
+                            junit 'frontend/test-results/junit.xml'
+                        }
                     }
                 }
             }
