@@ -26,22 +26,68 @@ pipeline {
             }
         }
 
+        stage('Build Shared Module') {
+            steps {
+                echo "Building shared module..."
+                dir('backend/shared') {
+                    sh '../mvnw clean install -DskipTests -q'
+                }
+            }
+        }
+
+        stage('Build Backend Services') {
+            parallel {
+                stage('Eureka Server') {
+                    steps {
+                        dir('backend/services/eureka') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('User Service') {
+                    steps {
+                        dir('backend/services/user') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('Product Service') {
+                    steps {
+                        dir('backend/services/product') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('Media Service') {
+                    steps {
+                        dir('backend/services/media') {
+                            sh '../../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+                stage('API Gateway') {
+                    steps {
+                        dir('backend/api-gateway') {
+                            sh '../mvnw clean package -DskipTests -q'
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Tests') {
             parallel {
                 stage('Backend Tests') {
                     steps {
                         sh '''
-                            cd backend || exit 1
-
-                            # Build shared module first
-                            cd shared && ../mvnw clean install -DskipTests -q && cd ..
-
-                            # Run tests for each service (pipeline fails if any test fails)
-                            cd services/user && ../../mvnw test -q && cd ../..
-                            cd services/product && ../../mvnw test -q && cd ../..
-                            cd services/media && ../../mvnw test -q && cd ../..
-                            cd services/eureka && ../../mvnw test -q && cd ../..
-                            cd api-gateway && ../mvnw test -q
+                            echo "Running backend tests on pre-compiled code..."
+                            
+                            # Run tests (code already compiled in previous stage)
+                            cd backend/services/user && ../../mvnw test -q && cd ../..
+                            cd backend/services/product && ../../mvnw test -q && cd ../..
+                            cd backend/services/media && ../../mvnw test -q && cd ../..
+                            cd backend/services/eureka && ../../mvnw test -q && cd ../..
+                            cd backend/api-gateway && ../mvnw test -q
                         '''
                     }
                     post {
