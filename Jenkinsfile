@@ -53,7 +53,6 @@ pipeline {
                             cd frontend
                             npm ci
                             npm run test
-                            echo "✅ Frontend tests passed"
                         '''
                     }
                 }
