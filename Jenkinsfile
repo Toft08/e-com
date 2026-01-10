@@ -68,7 +68,7 @@ pipeline {
                     // Analyze all backend services AND frontend with explicit source paths
                     sh '''
                         cd backend
-                        ./mvnw sonar:sonar \
+                        ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                             -Dsonar.projectKey=safe-zone \
                             -Dsonar.projectName="safe-zone" \
                             -Dsonar.host.url=http://host.docker.internal:9000 \
