@@ -100,13 +100,15 @@ pipeline {
 
                             echo "Quality Gate Status: ${QUALITY_GATE}"
 
-                            if [ "${QUALITY_GATE}" = "ERROR" ]; then
-                                echo "❌ Quality Gate FAILED!"
-                                exit 1
-                            elif [ "${QUALITY_GATE}" = "OK" ]; then
+                            # Strict quality gate enforcement
+                            if [ "${QUALITY_GATE}" = "OK" ]; then
                                 echo "✅ Quality Gate PASSED!"
+                            elif [ "${QUALITY_GATE}" = "NONE" ]; then
+                                echo "⚠️  Quality Gate: No status yet (first analysis)"
                             else
-                                echo "⚠️  Quality Gate Status: ${QUALITY_GATE} (accepting for first run)"
+                                echo "❌ Quality Gate FAILED with status: ${QUALITY_GATE}"
+                                echo "Check SonarQube dashboard for details: http://localhost:9000"
+                                exit 1
                             fi
                         '''
                     }
