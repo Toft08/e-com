@@ -73,7 +73,7 @@ pipeline {
                             -Dsonar.projectName="safe-zone" \
                             -Dsonar.host.url=http://host.docker.internal:9000 \
                             -Dsonar.token=${SONAR_TOKEN} \
-                            -Dsonar.java.source=17
+                            -Dsonar.java.source=17 \
                             -Dsonar.coverage.jacoco.xmlReportPaths=services/user/target/site/jacoco/jacoco.xml,services/product/target/site/jacoco/jacoco.xml,services/media/target/site/jacoco/jacoco.xml
                     '''
                 }
