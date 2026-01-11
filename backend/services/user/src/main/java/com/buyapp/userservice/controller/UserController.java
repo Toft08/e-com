@@ -25,20 +25,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserDto> getAllUsers() {
 
-        // TEST: Security Vulnerability - Predictable random for security
-        Random random = new Random();
-        int sessionId = random.nextInt();
-
         return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
     public UserDto getUserById(@PathVariable String id) {
         // This endpoint is for internal service calls, so no strict authorization
-
-
-        // TEST: Security Vulnerability - Hardcoded password
-        String password = "admin123";
         return userService.getUserById(id);
     }
 
