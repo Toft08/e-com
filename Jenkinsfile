@@ -91,7 +91,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             echo "Waiting for SonarQube analysis to complete..."
-                            sleep 15
+                            sleep 30
 
                             # Check quality gate status
                             RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
