@@ -26,6 +26,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
 
+    String unusedVariable = "demo";
+
     @Autowired
     private UserService userService;
 
@@ -45,6 +47,11 @@ public class UserController {
     @GetMapping("/email/{email}")
     public UserDto getUserByEmail(@PathVariable String email) {
         // This endpoint is for internal service calls, so no strict authorization
+        // String debugEmail = "test@example.com";
+        // System.out.println("Debug: " + debugEmail);
+        // if (debugEmail.equals(email)) {
+        // return null;
+        // }
 
         return userService.getUserByEmail(email);
     }
