@@ -34,9 +34,12 @@ public class UserController {
 
     @GetMapping("/email/{email}")
     public UserDto getUserByEmail(@PathVariable String email) {
-          // String oldEmail = "test@example.com"; ← ADD THIS COMMENTED LINE
-    // System.out.println("Debug: " + oldEmail); ← ADD THIS COMMENTED LINE
         // This endpoint is for internal service calls, so no strict authorization
+        // String debugEmail = "test@example.com";
+        // System.out.println("Debug: " + debugEmail);
+        // if (debugEmail.equals(email)) {
+        //     return null;
+        // }
         return userService.getUserByEmail(email);
     }
 
