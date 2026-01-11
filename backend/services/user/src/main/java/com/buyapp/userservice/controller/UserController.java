@@ -26,8 +26,6 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
 
-    String unusedVariable = "demo";
-
     @Autowired
     private UserService userService;
 
