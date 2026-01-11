@@ -45,6 +45,12 @@ public class UserController {
     @GetMapping("/email/{email}")
     public UserDto getUserByEmail(@PathVariable String email) {
 
+        // String debugEmail = "test@example.com";
+        // System.out.println("Debug: " + debugEmail);
+        // if (debugEmail.equals(email)) {
+        // return null;
+        // }
+
         return userService.getUserByEmail(email);
     }
 
