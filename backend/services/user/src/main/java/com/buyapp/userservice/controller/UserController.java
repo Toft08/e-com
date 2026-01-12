@@ -40,6 +40,9 @@ public class UserController {
     public UserDto getUserById(@PathVariable String id) {
         // This endpoint is for internal service calls, so no strict authorization
 
+        // testing
+        String useless = "nothing";
+
         return userService.getUserById(id);
     }
 
