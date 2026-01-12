@@ -3,7 +3,7 @@ pipeline {
 
     // Automatic build trigger on new commits
     triggers {
-        pollSCM('H/1 * * * *')
+        pollSCM('* * * * *')
     }
 
     options {
@@ -59,36 +59,137 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Health Check') {
+            steps {
+                sh '''
+                    echo "Checking SonarQube health..."
+                    SONAR_URL="http://localhost:9000"
+                    
+                    # Check if SonarQube is healthy (not just available)
+                    HEALTH_STATUS=$(curl -f -s "$SONAR_URL/api/system/health" | grep -o '"health":"[^"]*"' | cut -d'"' -f4 || echo "UNREACHABLE")
+                    
+                    if [ "$HEALTH_STATUS" != "GREEN" ]; then
+                        echo "⚠️  SonarQube is not healthy. Status: $HEALTH_STATUS"
+                        echo "Please start SonarQube: cd sonarqube && docker-compose up -d"
+                        exit 1
+                    fi
+                    
+                    echo "✅ SonarQube is healthy and ready"
+                '''
+            }
+        }
+
+        stage('SonarQube Backend Analysis') {
+            parallel {
+                stage('User Service') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                dir('backend/services/user') {
+                                    sh '''
+                                        echo "Analyzing User Service..."
+                                        ../../mvnw sonar:sonar \
+                                            -Dsonar.projectKey=e-com-user-service \
+                                            -Dsonar.projectName="User Service" \
+                                            -Dsonar.host.url=http://localhost:9000
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Product Service') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                dir('backend/services/product') {
+                                    sh '''
+                                        echo "Analyzing Product Service..."
+                                        ../../mvnw sonar:sonar \
+                                            -Dsonar.projectKey=e-com-product-service \
+                                            -Dsonar.projectName="Product Service" \
+                                            -Dsonar.host.url=http://localhost:9000
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Media Service') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                dir('backend/services/media') {
+                                    sh '''
+                                        echo "Analyzing Media Service..."
+                                        ../../mvnw sonar:sonar \
+                                            -Dsonar.projectKey=e-com-media-service \
+                                            -Dsonar.projectName="Media Service" \
+                                            -Dsonar.host.url=http://localhost:9000
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Eureka Service') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                dir('backend/services/eureka') {
+                                    sh '''
+                                        echo "Analyzing Eureka Service..."
+                                        ../../mvnw sonar:sonar \
+                                            -Dsonar.projectKey=e-com-eureka-service \
+                                            -Dsonar.projectName="Eureka Service" \
+                                            -Dsonar.host.url=http://localhost:9000
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('API Gateway') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                dir('backend/api-gateway') {
+                                    sh '''
+                                        echo "Analyzing API Gateway..."
+                                        ../mvnw sonar:sonar \
+                                            -Dsonar.projectKey=e-com-api-gateway \
+                                            -Dsonar.projectName="API Gateway" \
+                                            -Dsonar.host.url=http://localhost:9000
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Frontend Analysis') {
             steps {
                 script {
-                    // Ensure SonarQube is running
-                    sh '''
-                        echo "Checking SonarQube availability..."
-                        SONAR_URL="http://localhost:9000"
-                        
-                        if ! curl -f -s "$SONAR_URL/api/system/status" > /dev/null 2>&1; then
-                            echo "⚠️  SonarQube is not running at $SONAR_URL"
-                            echo "Please start SonarQube: cd sonarqube && docker-compose up -d"
-                            exit 1
-                        fi
-                        
-                        echo "✅ SonarQube is available"
-                    '''
-                    
-                    // Run SonarQube analysis with quality profile
                     withSonarQubeEnv('SonarQube') {
-                        sh '''
-                            cd backend
-                            
-                            echo "Running SonarQube analysis..."
-                            mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=e-com-backend \
-                                -Dsonar.projectName="E-commerce Backend" \
-                                -Dsonar.host.url=http://localhost:9000 \
-                                -Dsonar.java.binaries=target/classes \
-                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-                        '''
+                        dir('frontend') {
+                            sh '''
+                                echo "Analyzing Frontend (Angular)..."
+                                
+                                # Use npx to run sonar-scanner without global install
+                                npx sonarqube-scanner \
+                                    -Dsonar.projectKey=e-com-frontend \
+                                    -Dsonar.projectName="E-commerce Frontend" \
+                                    -Dsonar.sources=src \
+                                    -Dsonar.tests=src \
+                                    -Dsonar.test.inclusions="**/*.spec.ts" \
+                                    -Dsonar.exclusions="**/node_modules/**,**/*.spec.ts,**/coverage/**" \
+                                    -Dsonar.javascript.lcov.reportPaths=coverage/e-com/lcov.info \
+                                    -Dsonar.typescript.lcov.reportPaths=coverage/e-com/lcov.info \
+                                    -Dsonar.host.url=http://localhost:9000
+                            '''
+                        }
                     }
                 }
             }
@@ -98,6 +199,7 @@ pipeline {
             steps {
                 script {
                     echo "Waiting for SonarQube Quality Gate result..."
+                    echo "Enforcing quality on Frontend (customer-facing application)"
                     timeout(time: 5, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
@@ -249,7 +351,7 @@ pipeline {
 
                 // Send email notification
                 def buildStatus = currentBuild.currentResult
-                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'toft.dah@gmail.com'
                 def recipientList = emailRecipients.split(',').collect { it.trim() }
 
                 def statusEmoji = buildStatus == 'SUCCESS' ? '✅' : '❌'

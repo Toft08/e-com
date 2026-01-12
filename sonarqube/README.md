@@ -34,9 +34,11 @@ Wait ~30 seconds for SonarQube to start.
 In Jenkins:
 
 1. Install **SonarQube Scanner** plugin:
+
    - Manage Jenkins → Plugins → Available → Search "SonarQube Scanner"
 
 2. Configure SonarQube server:
+
    - Manage Jenkins → Configure System → SonarQube servers
    - Name: `SonarQube`
    - Server URL: `http://sonarqube:9000` (Docker network) or `http://localhost:9000` (local)
@@ -101,6 +103,7 @@ Default quality gate fails if:
 - **Security Rating** worse than A
 
 You can customize quality gates in SonarQube:
+
 - Administration → Quality Gates → Create
 
 ## Project Structure
@@ -113,9 +116,9 @@ sonarqube/
 
 ## Services
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| SonarQube | 9000 | Web UI and API |
+| Service    | Port | Purpose                       |
+| ---------- | ---- | ----------------------------- |
+| SonarQube  | 9000 | Web UI and API                |
 | PostgreSQL | 5432 | SonarQube database (internal) |
 
 ## Troubleshooting
