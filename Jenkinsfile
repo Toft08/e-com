@@ -16,6 +16,7 @@ pipeline {
         NODE_HOME = tool name: 'NodeJS-20', type: 'nodejs'
         PATH = "${JAVA_HOME}/bin:${NODE_HOME ?: '/usr'}/bin:${PATH}"
         DOCKER_BUILDKIT = '1'
+        MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2"
     }
 
     stages {
