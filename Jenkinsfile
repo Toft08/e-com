@@ -236,86 +236,89 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Save current running images for rollback
+                    // Initialize or increment deployment version
                     sh '''
                         mkdir -p .deployment-state
-
-                        # Save currently running image IDs before deployment
-                        echo "Saving current deployment state for rollback..."
-                        docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -E "ecom-|e-commerce" > .deployment-state/previous-images.txt || echo "No previous images found" > .deployment-state/previous-images.txt
-
-                        # Save current container state
-                        docker ps --filter "name=ecom-" --format "{{.Names}} {{.Image}}" > .deployment-state/previous-containers.txt || true
+                        
+                        if [ -f .deployment-state/current-version.txt ]; then
+                            CURRENT_VERSION=$(cat .deployment-state/current-version.txt)
+                        else
+                            CURRENT_VERSION=0
+                        fi
+                        
+                        NEXT_VERSION=$((CURRENT_VERSION + 1))
+                        echo $NEXT_VERSION > .deployment-state/next-version.txt
+                        echo $CURRENT_VERSION > .deployment-state/previous-version.txt
+                        
+                        echo "Deploying v$NEXT_VERSION (current: v$CURRENT_VERSION)"
                     '''
 
-                    // Deploy new version (Zero-downtime rolling update)
+                    // Deploy new version with versioned containers
                     sh '''
-                        echo "Deploying new version with zero-downtime rolling update..."
+                        DEPLOY_VERSION=$(cat .deployment-state/next-version.txt)
+                        PREVIOUS_VERSION=$(cat .deployment-state/previous-version.txt)
+                        export DEPLOY_VERSION
                         
-                        # NO 'down' command - this ensures old containers keep running during deployment
-                        # docker-compose up -d will:
-                        # 1. Start new containers
-                        # 2. Wait for them to be healthy
-                        # 3. Only then remove old containers
                         docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
-
-                        # Wait for services to stabilize
-                        echo "Waiting for new containers to be healthy..."
                         sleep 30
-
-                        # Verify services are running
                         docker-compose -f docker-compose.yml -f docker-compose.ci.yml ps
 
-                        # Check if all services are healthy
-                        UNHEALTHY=$(docker ps --filter "name=ecom-" --filter "health=unhealthy" --format "{{.Names}}" || true)
+                        UNHEALTHY=$(docker ps --filter "name=ecom-.*-${DEPLOY_VERSION}" --filter "health=unhealthy" --format "{{.Names}}" || true)
                         if [ -n "$UNHEALTHY" ]; then
-                            echo "ERROR: Unhealthy services detected: $UNHEALTHY"
+                            echo "ERROR: Unhealthy services in v$DEPLOY_VERSION: $UNHEALTHY"
                             exit 1
                         fi
 
-                        echo "✅ Zero-downtime deployment successful - all services healthy"
+                        echo "v$DEPLOY_VERSION deployed successfully"
+                        
+                        if [ "$PREVIOUS_VERSION" != "0" ]; then
+                            docker ps -a --filter "name=ecom-.*-${PREVIOUS_VERSION}" --format "{{.Names}}" | xargs -r docker rm -f || true
+                            echo "Removed v$PREVIOUS_VERSION containers"
+                        fi
+                        
+                        echo $DEPLOY_VERSION > .deployment-state/current-version.txt
                     '''
                 }
             }
             post {
                 failure {
                     script {
-                        echo "❌ Deployment failed - Initiating rollback to previous working version"
+                        echo "Deployment failed - initiating rollback"
                         sh '''
-                            # With zero-downtime deployment, old containers might still be running
-                            # Check if we have previous images to tag as current
+                            FAILED_VERSION=$(cat .deployment-state/next-version.txt 2>/dev/null || echo "unknown")
+                            PREVIOUS_VERSION=$(cat .deployment-state/previous-version.txt 2>/dev/null || echo "0")
                             
-                            if [ -f .deployment-state/previous-containers.txt ] && [ -s .deployment-state/previous-containers.txt ]; then
-                                echo "Restoring previous deployment..."
-
-                                if [ -f .deployment-state/previous-images.txt ]; then
-                                    echo "Previous images:"
-                                    cat .deployment-state/previous-images.txt
-                                fi
-
-                                # Force restart with known good configuration
-                                # This will replace any failed new containers with stable ones
-                                docker-compose -f docker-compose.yml -f docker-compose.ci.yml down || true
-                                sleep 3
-                                docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d || {
-                                    echo "⚠️  Could not restore previous deployment - manual intervention required"
-                                    exit 1
-                                }
-                                
-                                sleep 15
-                                echo "✅ Rollback completed - previous version restored"
-                            else
-                                echo "⚠️  No previous deployment found to rollback to"
-                                echo "Attempting to keep current running containers..."
+                            echo "Rolling back: v$FAILED_VERSION -> v$PREVIOUS_VERSION"
+                            
+                            if [ "$FAILED_VERSION" != "unknown" ]; then
+                                docker ps -a --filter "name=ecom-.*-${FAILED_VERSION}" --format "{{.Names}}" | xargs -r docker rm -f || true
                             fi
+                            
+                            if [ "$PREVIOUS_VERSION" != "0" ]; then
+                                OLD_CONTAINERS=$(docker ps --filter "name=ecom-.*-${PREVIOUS_VERSION}" --format "{{.Names}}" | wc -l)
+                                if [ "$OLD_CONTAINERS" -gt 0 ]; then
+                                    echo "v$PREVIOUS_VERSION still running - no downtime"
+                                    docker ps --filter "name=ecom-.*-${PREVIOUS_VERSION}" --format "table {{.Names}}\t{{.Status}}"
+                                else
+                                    export DEPLOY_VERSION=$PREVIOUS_VERSION
+                                    docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d || {
+                                        echo "ERROR: Could not restore v$PREVIOUS_VERSION"
+                                        exit 1
+                                    }
+                                    sleep 15
+                                    echo "v$PREVIOUS_VERSION restored"
+                                fi
+                            else
+                                echo "No previous version available (first deployment)"
+                            fi
+                            
+                            echo "Rollback complete - running v$PREVIOUS_VERSION"
                         '''
                     }
                 }
                 success {
                     script {
-                        echo "✅ Deployment successful - saving deployment state"
                         sh '''
-                            # Save successful deployment info
                             echo "BUILD_NUMBER=${BUILD_NUMBER}" > .deployment-state/last-successful.txt
                             echo "GIT_COMMIT=${GIT_COMMIT}" >> .deployment-state/last-successful.txt
                             echo "TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .deployment-state/last-successful.txt
