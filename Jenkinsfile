@@ -63,19 +63,19 @@ pipeline {
         stage('SonarQube Health Check') {
             steps {
                 sh '''
-                    echo "Checking SonarQube health..."
+                    echo "Checking SonarQube availability..."
                     SONAR_URL="http://host.docker.internal:9000"
                     
-                    # Check if SonarQube is healthy (not just available)
-                    HEALTH_STATUS=$(curl -f -s "$SONAR_URL/api/system/health" | grep -o '"health":"[^"]*"' | cut -d'"' -f4 || echo "UNREACHABLE")
+                    # Check if SonarQube is available (using unauthenticated endpoint)
+                    STATUS=$(curl -f -s "$SONAR_URL/api/system/status" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || echo "UNREACHABLE")
                     
-                    if [ "$HEALTH_STATUS" != "GREEN" ]; then
-                        echo "⚠️  SonarQube is not healthy. Status: $HEALTH_STATUS"
+                    if [ "$STATUS" != "UP" ]; then
+                        echo "⚠️  SonarQube is not available. Status: $STATUS"
                         echo "Please start SonarQube: cd sonarqube && docker-compose up -d"
                         exit 1
                     fi
                     
-                    echo "✅ SonarQube is healthy and ready"
+                    echo "✅ SonarQube is UP and ready"
                 '''
             }
         }
