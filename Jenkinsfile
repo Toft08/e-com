@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-    // Automatic build trigger on new commits
+    // Automatic build trigger via GitHub webhook
     triggers {
-        pollSCM('H/1 * * * *')
+        githubPush()
     }
 
     options {
@@ -12,10 +12,12 @@ pipeline {
     }
 
     environment {
+        GITHUB_TOKEN = credentials('github-token')
         JAVA_HOME = tool name: 'JDK-17', type: 'jdk'
         NODE_HOME = tool name: 'NodeJS-20', type: 'nodejs'
         PATH = "${JAVA_HOME}/bin:${NODE_HOME ?: '/usr'}/bin:${PATH}"
         DOCKER_BUILDKIT = '1'
+        MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2"
     }
 
     stages {
@@ -54,6 +56,164 @@ pipeline {
                             npm ci
                             npm run test
                         '''
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Health Check') {
+            steps {
+                sh '''
+                    echo "Checking SonarQube availability..."
+                    SONAR_URL="http://host.docker.internal:9000"
+                    
+                    # Check if SonarQube is available (using unauthenticated endpoint)
+                    STATUS=$(curl -f -s "$SONAR_URL/api/system/status" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || echo "UNREACHABLE")
+                    
+                    if [ "$STATUS" != "UP" ]; then
+                        echo "⚠️  SonarQube is not available. Status: $STATUS"
+                        echo "Please start SonarQube: cd sonarqube && docker-compose up -d"
+                        exit 1
+                    fi
+                    
+                    echo "✅ SonarQube is UP and ready"
+                    
+                    # Pre-create Maven local repository to avoid parallel race conditions
+                    echo "Initializing Maven repository at ${WORKSPACE}/.m2"
+                    mkdir -p "${WORKSPACE}/.m2/repository"
+                '''
+            }
+        }
+
+        stage('User Service Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('backend/services/user') {
+                            sh '''
+                                echo "Analyzing User Service..."
+                                ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                                    -Dsonar.projectKey=e-com-user-service \
+                                    -Dsonar.projectName="User Service" \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Product Service Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('backend/services/product') {
+                            sh '''
+                                echo "Analyzing Product Service..."
+                                ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                                    -Dsonar.projectKey=e-com-product-service \
+                                    -Dsonar.projectName="Product Service" \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Media Service Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('backend/services/media') {
+                            sh '''
+                                echo "Analyzing Media Service..."
+                                ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                                    -Dsonar.projectKey=e-com-media-service \
+                                    -Dsonar.projectName="Media Service" \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Eureka Service Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('backend/services/eureka') {
+                            sh '''
+                                echo "Analyzing Eureka Service..."
+                                ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                                    -Dsonar.projectKey=e-com-eureka-service \
+                                    -Dsonar.projectName="Eureka Service" \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('API Gateway Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('backend/api-gateway') {
+                            sh '''
+                                echo "Analyzing API Gateway..."
+                                ../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                                    -Dsonar.projectKey=e-com-api-gateway \
+                                    -Dsonar.projectName="API Gateway" \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Frontend Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        dir('frontend') {
+                            sh '''
+                                echo "Analyzing Frontend (Angular)..."
+                                
+                                # Use npx to run sonar-scanner without global install
+                                npx sonarqube-scanner \
+                                    -Dsonar.projectKey=e-com-frontend \
+                                    -Dsonar.projectName="E-commerce Frontend" \
+                                    -Dsonar.sources=src \
+                                    -Dsonar.tests=src \
+                                    -Dsonar.test.inclusions="**/*.spec.ts" \
+                                    -Dsonar.exclusions="**/node_modules/**,**/*.spec.ts,**/coverage/**" \
+                                    -Dsonar.javascript.lcov.reportPaths=coverage/e-com/lcov.info \
+                                    -Dsonar.typescript.lcov.reportPaths=coverage/e-com/lcov.info \
+                                    -Dsonar.host.url=http://host.docker.internal:9000
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    echo "Waiting for SonarQube Quality Gate result..."
+                    echo "Enforcing quality on Frontend (customer-facing application)"
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "❌ Quality Gate failed: ${qg.status}\n" +
+                                  "Please check SonarQube dashboard at http://localhost:9000 for details."
+                        } else {
+                            echo "✅ Quality Gate passed successfully!"
+                        }
                     }
                 }
             }
@@ -175,6 +335,32 @@ pipeline {
                 def commitMessage = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
                 env.COMMIT_MESSAGE = commitMessage
 
+                // Report status to GitHub (for PRs and commits)
+                def buildState = currentBuild.currentResult?.toLowerCase() ?: 'success'
+                def ghState = (buildState == 'success') ? 'success' : 'failure'
+                
+                if (env.GIT_COMMIT) {
+                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            set +e
+                            
+                            # Report Jenkins build status
+                            curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                                -X POST -H "Accept: application/vnd.github.v3+json" \\
+                                -d '{"state":"${ghState}", "context":"Jenkins", "description":"Build ${buildState}", "target_url":"${BUILD_URL}"}' \\
+                                https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
+                            
+                            # Report SonarQube quality gate status
+                            curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                                -X POST -H "Accept: application/vnd.github.v3+json" \\
+                                -d '{"state":"${ghState}", "context":"SonarQube quality gate check", "description":"Quality gate ${buildState}"}' \\
+                                https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
+                            
+                            exit 0
+                        """
+                    }
+                }
+
                 // Archive test results (backend and frontend combined)
                 junit allowEmptyResults: true, testResults: 'backend/**/target/surefire-reports/*.xml, frontend/test-results/*.xml'
 
@@ -197,7 +383,7 @@ pipeline {
 
                 // Send email notification
                 def buildStatus = currentBuild.currentResult
-                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'anastasia.suhareva@gmail.com, toft.diederichs@gritlab.ax'
+                def emailRecipients = env.EMAIL_RECIPIENTS ?: 'toft.dah@gmail.com'
                 def recipientList = emailRecipients.split(',').collect { it.trim() }
 
                 def statusEmoji = buildStatus == 'SUCCESS' ? '✅' : '❌'
