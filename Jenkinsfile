@@ -64,7 +64,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Checking SonarQube health..."
-                    SONAR_URL="http://localhost:9000"
+                    SONAR_URL="http://host.docker.internal:9000"
                     
                     # Check if SonarQube is healthy (not just available)
                     HEALTH_STATUS=$(curl -f -s "$SONAR_URL/api/system/health" | grep -o '"health":"[^"]*"' | cut -d'"' -f4 || echo "UNREACHABLE")
@@ -92,7 +92,7 @@ pipeline {
                                         ../../mvnw sonar:sonar \
                                             -Dsonar.projectKey=e-com-user-service \
                                             -Dsonar.projectName="User Service" \
-                                            -Dsonar.host.url=http://localhost:9000
+                                            -Dsonar.host.url=http://host.docker.internal:9000
                                     '''
                                 }
                             }
@@ -109,7 +109,7 @@ pipeline {
                                         ../../mvnw sonar:sonar \
                                             -Dsonar.projectKey=e-com-product-service \
                                             -Dsonar.projectName="Product Service" \
-                                            -Dsonar.host.url=http://localhost:9000
+                                            -Dsonar.host.url=http://host.docker.internal:9000
                                     '''
                                 }
                             }
@@ -126,7 +126,7 @@ pipeline {
                                         ../../mvnw sonar:sonar \
                                             -Dsonar.projectKey=e-com-media-service \
                                             -Dsonar.projectName="Media Service" \
-                                            -Dsonar.host.url=http://localhost:9000
+                                            -Dsonar.host.url=http://host.docker.internal:9000
                                     '''
                                 }
                             }
@@ -143,7 +143,7 @@ pipeline {
                                         ../../mvnw sonar:sonar \
                                             -Dsonar.projectKey=e-com-eureka-service \
                                             -Dsonar.projectName="Eureka Service" \
-                                            -Dsonar.host.url=http://localhost:9000
+                                            -Dsonar.host.url=http://host.docker.internal:9000
                                     '''
                                 }
                             }
@@ -160,7 +160,7 @@ pipeline {
                                         ../mvnw sonar:sonar \
                                             -Dsonar.projectKey=e-com-api-gateway \
                                             -Dsonar.projectName="API Gateway" \
-                                            -Dsonar.host.url=http://localhost:9000
+                                            -Dsonar.host.url=http://host.docker.internal:9000
                                     '''
                                 }
                             }
@@ -188,7 +188,7 @@ pipeline {
                                     -Dsonar.exclusions="**/node_modules/**,**/*.spec.ts,**/coverage/**" \
                                     -Dsonar.javascript.lcov.reportPaths=coverage/e-com/lcov.info \
                                     -Dsonar.typescript.lcov.reportPaths=coverage/e-com/lcov.info \
-                                    -Dsonar.host.url=http://localhost:9000
+                                    -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
                     }
