@@ -309,15 +309,6 @@ pipeline {
                         '''
                     }
                 }
-                success {
-                    script {
-                        sh '''
-                            echo "BUILD_NUMBER=${BUILD_NUMBER}" > .deployment-state/last-successful.txt
-                            echo "GIT_COMMIT=${GIT_COMMIT}" >> .deployment-state/last-successful.txt
-                            echo "TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .deployment-state/last-successful.txt
-                        '''
-                    }
-                }
             }
         }
     }
