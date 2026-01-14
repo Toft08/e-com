@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-    // Automatic build trigger on new commits
+    // Automatic build trigger via GitHub webhook
     triggers {
-        pollSCM('* * * * *')
+        githubPush()
     }
 
     options {
@@ -12,6 +12,7 @@ pipeline {
     }
 
     environment {
+        GITHUB_TOKEN = credentials('github-token')
         JAVA_HOME = tool name: 'JDK-17', type: 'jdk'
         NODE_HOME = tool name: 'NodeJS-20', type: 'nodejs'
         PATH = "${JAVA_HOME}/bin:${NODE_HOME ?: '/usr'}/bin:${PATH}"
