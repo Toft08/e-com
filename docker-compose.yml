@@ -4,7 +4,7 @@ services:
   # -------------------
   kafka:
     image: apache/kafka:3.8.1
-    container_name: ecom-kafka-${DEPLOY_VERSION:-1}
+    container_name: ecom-kafka
     expose:
       - '9092'
     environment:
@@ -27,7 +27,7 @@ services:
   # -------------------
   mongodb:
     image: mongo:latest
-    container_name: ecom-mongodb-${DEPLOY_VERSION:-1}
+    container_name: ecom-mongodb
     ports:
       - '27017:27017'
     environment:

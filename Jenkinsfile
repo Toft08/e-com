@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     options {
+        disableConcurrentBuilds()
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
     }
@@ -254,6 +255,16 @@ pipeline {
                         PREVIOUS_VERSION=$(cat .deployment-state/previous-version.txt)
                         export DEPLOY_VERSION
                         
+                        # Remove any existing containers with the new version number (from failed previous attempts)
+                        docker ps -a --filter "name=ecom-.*-${DEPLOY_VERSION}" --format "{{.Names}}" | xargs -r docker rm -f || true
+                        
+                        # Start stateful services (MongoDB, Kafka) first if not running
+                        # These are singletons (no versioning) and persist across deployments
+                        docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d mongodb kafka
+                        sleep 5
+                        
+                        # Deploy versioned application services
+                        # Old version stays running until new version is healthy
                         docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
                         sleep 30
                         docker-compose -f docker-compose.yml -f docker-compose.ci.yml ps
