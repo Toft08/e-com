@@ -91,6 +91,7 @@ pipeline {
                                 ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                                     -Dsonar.projectKey=e-com-user-service \
                                     -Dsonar.projectName="User Service" \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                     -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
@@ -109,6 +110,7 @@ pipeline {
                                 ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                                     -Dsonar.projectKey=e-com-product-service \
                                     -Dsonar.projectName="Product Service" \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                     -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
@@ -127,6 +129,7 @@ pipeline {
                                 ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                                     -Dsonar.projectKey=e-com-media-service \
                                     -Dsonar.projectName="Media Service" \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                     -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
@@ -145,6 +148,7 @@ pipeline {
                                 ../../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                                     -Dsonar.projectKey=e-com-eureka-service \
                                     -Dsonar.projectName="Eureka Service" \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                     -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
@@ -163,6 +167,7 @@ pipeline {
                                 ../mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                                     -Dsonar.projectKey=e-com-api-gateway \
                                     -Dsonar.projectName="API Gateway" \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                                     -Dsonar.host.url=http://host.docker.internal:9000
                             '''
                         }
