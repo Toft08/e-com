@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    // Automatic build trigger via GitHub webhook
-    triggers {
-        githubPush()
-    }
-
     options {
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
