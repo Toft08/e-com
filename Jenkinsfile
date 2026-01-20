@@ -14,7 +14,6 @@ pipeline {
         PATH = "${JAVA_HOME}/bin:${NODE_HOME ?: '/usr'}/bin:${PATH}"
         DOCKER_BUILDKIT = '1'
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2"
-        COMPOSE_PROJECT_NAME = 'ecom'  // Fixed project name - all branches share same infra containers
     }
 
     stages {
