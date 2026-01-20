@@ -210,10 +210,32 @@ pipeline {
                     timeout(time: 5, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
+                            // Report failure to GitHub
+                            if (env.GIT_COMMIT) {
+                                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                                    sh """
+                                        curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                                            -X POST -H "Accept: application/vnd.github.v3+json" \\
+                                            -d '{"state":"failure", "context":"SonarQube quality gate check", "description":"Quality gate failed"}' \\
+                                            https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
+                                    """
+                                }
+                            }
                             error "❌ Quality Gate failed: ${qg.status}\n" +
                                   "Please check SonarQube dashboard at http://localhost:9000 for details."
                         } else {
                             echo "✅ Quality Gate passed successfully!"
+                            // Report success to GitHub
+                            if (env.GIT_COMMIT) {
+                                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                                    sh """
+                                        curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                                            -X POST -H "Accept: application/vnd.github.v3+json" \\
+                                            -d '{"state":"success", "context":"SonarQube quality gate check", "description":"Quality gate passed"}' \\
+                                            https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
+                                    """
+                                }
+                            }
                         }
                     }
                 }
@@ -221,6 +243,7 @@ pipeline {
         }
 
         stage('Build') {
+            when { branch 'main' }
             steps {
                 sh '''
                     # Generate SSL certificates if needed
@@ -235,6 +258,7 @@ pipeline {
         }
 
         stage('Deploy') {
+            when { branch 'main' }
             steps {
                 script {
                     sh '''
@@ -329,21 +353,11 @@ pipeline {
                 if (env.GIT_COMMIT) {
                     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                         sh """
-                            set +e
-                            
                             # Report Jenkins build status
                             curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
                                 -X POST -H "Accept: application/vnd.github.v3+json" \\
                                 -d '{"state":"${ghState}", "context":"Jenkins", "description":"Build ${buildState}", "target_url":"${BUILD_URL}"}' \\
                                 https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
-                            
-                            # Report SonarQube quality gate status
-                            curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
-                                -X POST -H "Accept: application/vnd.github.v3+json" \\
-                                -d '{"state":"${ghState}", "context":"SonarQube quality gate check", "description":"Quality gate ${buildState}"}' \\
-                                https://api.github.com/repos/Toft08/e-com/statuses/\${GIT_COMMIT} || true
-                            
-                            exit 0
                         """
                     }
                 }
