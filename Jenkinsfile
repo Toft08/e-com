@@ -221,6 +221,9 @@ pipeline {
         }
 
         stage('Build') {
+            when {
+                'main'
+            }
             steps {
                 sh '''
                     # Generate SSL certificates if needed
@@ -235,6 +238,9 @@ pipeline {
         }
 
         stage('Deploy') {
+            when {
+                'main'
+            }
             steps {
                 script {
                     sh '''
